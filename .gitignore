@@ -77,7 +77,7 @@ htmlcov/
 
 
 # Media files
-/media/
+media/
 
 # Virtual environment
 my_life_env/
