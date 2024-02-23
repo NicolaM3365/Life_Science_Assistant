@@ -1,7 +1,7 @@
 import os
 import requests
 from django.shortcuts import render, get_object_or_404, HttpResponseRedirect
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseServerError
 from django.urls import reverse
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
@@ -15,6 +15,46 @@ from .forms import (
     ChatForm, PDFAnalysisForm, UploadPDFUrlForm, UploadPDFForm
 )
 
+def handle_upload_response(request, upload_type, response):
+    if response.status_code == 200:
+        # Handle successful upload
+        # You can redirect to a success page or another appropriate page
+        return HttpResponseRedirect(reverse('success_url'))
+
+    elif response.status_code == 400:
+        # Handle bad request errors
+        # You can render an error page or pass error information to the template
+        error_message = "Bad request error: {}".format(response.text)
+        return HttpResponseServerError(error_message)
+
+    elif response.status_code == 404:
+        # Handle not found errors
+        # You can render an error page or pass error information to the template
+        error_message = "Not found error: {}".format(response.text)
+        return HttpResponseServerError(error_message)
+
+    elif response.status_code == 413:
+        # Handle file size exceeded errors for file upload
+        if upload_type == 'file':
+            error_message = "File size exceeds the limit (4.5 MB). Please upload a smaller file or use the URL upload method."
+            return HttpResponseServerError(error_message)
+        else:
+            error_message = "Request Entity Too Large: {}".format(response.text)
+            return HttpResponseServerError(error_message)
+
+    elif response.status_code == 504:
+        # Handle timeout errors
+        error_message = "Timeout error: The upload process took too long (300 seconds). Please try again later or use a different upload method."
+        return HttpResponseServerError(error_message)
+
+    else:
+        # Handle other errors
+        error_message = "An error occurred during the upload: {}".format(response.text)
+        return HttpResponseServerError(error_message)
+
+def success_page(request):
+    return render(request, 'research_support/success.html')
+    
 def my_view(request):
     api_key = os.environ.get('PDF_AI_API_KEY')
     if not api_key:
@@ -95,7 +135,6 @@ def update_pdf(request, file_name):
         'form': form
     })
 
-
 def upload_pdf(request):
     if request.method == 'POST':
         # Check which form is being submitted
@@ -105,19 +144,19 @@ def upload_pdf(request):
             if url_form.is_valid():
                 # Handle URL upload
                 response = upload_pdf_to_ai_pdf_api(url_form.cleaned_data, upload_type='url')
-                return handle_upload_response(response)
+                return handle_upload_response(response, request)
         elif 'file_submit' in request.POST:
             file_form = UploadPDFForm(request.POST, request.FILES)
             url_form = UploadPDFUrlForm()
             if file_form.is_valid():
                 # Handle file upload
                 response = upload_pdf_to_ai_pdf_api(file_form.cleaned_data, upload_type='file')
-                return handle_upload_response(response)
+                return handle_upload_response(response, request)
     else:
         url_form = UploadPDFUrlForm()
         file_form = UploadPDFForm()
 
-    # return render(request, 'upload_pdf.html', {'url_form': url_form, 'file_form': file_form})
+    # If the request method is not POST or form submission is not valid, render the form
     return render(request, 'research_support/upload_pdf.html', {'url_form': url_form, 'file_form': file_form})
 
 def upload_pdf_to_ai_pdf_api(data, upload_type):
@@ -144,7 +183,8 @@ def handle_upload_response(response, request):
     if response.status_code == 200:
         # Handle successful upload
         # You can redirect to a success page or another appropriate page
-        return HttpResponseRedirect('/success-url/')
+        return HttpResponseRedirect('success_url')
+        
     else:
         # Handle upload error
         # You can render an error page or pass error information to the template
