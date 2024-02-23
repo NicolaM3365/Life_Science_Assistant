@@ -99,7 +99,7 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 
 
 DATABASES = {
-    'default': dj_database_url.parse('postgres://life_research_assistant_user:VrK6GcQ1sirpikHz84A3fyc2pYbj0zuS@dpg-cnb6jnol5elc7399qq00-a/life_research_assistant', conn_max_age=600)
+    'default': dj_database_url.parse('postgres://life_research_assistant_user:VrK6GcQ1sirpikHz84A3fyc2pYbj0zuS@dpg-cnb6jnol5elc7399qq00-a.frankfurt-postgres.render.com/life_research_assistant', conn_max_age=600)
 }
 
 
