@@ -1,0 +1,29 @@
+{% extends "research_support/base.html" %}
+{% load static %}
+
+{% block content %}
+    <h2>PDF Details: {{ pdf.file_name }}</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">File Name: {{ pdf.file_name }}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Uploaded on: {{ pdf.upload_date }}</h6>
+            <p class="card-text">Additional details about the PDF can go here.</p>
+            <a href="{% url 'download_pdf' pdf.file_name %}" class="card-link">Download PDF</a>
+            <a href="{% url 'edit_pdf' pdf.file_name %}" class="card-link">Edit PDF</a>
+        </div>
+    </div>
+
+    <!-- Additional functionalities like viewing images, summaries, tags, etc., associated with the PDF -->
+    {% if pdf.images %}
+        <h3>Images</h3>
+        <!-- Display images here -->
+    {% endif %}
+
+    {% if pdf.summaries %}
+        <h3>Summaries</h3>
+        <!-- Display summaries here -->
+    {% endif %}
+
+    <!-- More sections can be added as per the related models and functionalities -->
+
+{% endblock %}

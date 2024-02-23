@@ -1,0 +1,14 @@
+{% extends "research_support/base.html" %}
+{% load static %}
+
+{% block content %}
+    <h2>Update PDF Details</h2>
+    <p>Confirm the updated details for the PDF file.</p>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Confirm Update</button>
+        <a href="{% url 'pdf_detail' pdf.file_name %}" class="btn btn-secondary">Cancel</a>
+    </form>
+{% endblock %}

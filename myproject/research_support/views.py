@@ -53,6 +53,86 @@ from django.views.generic import DetailView
 
 from django.urls import reverse_lazy
 
+# from django.http import JsonResponse
+# from .models import Document  # Assuming you have a Document model
+# from .forms import DocumentForm  # Assuming you have a form for Document
+
+# from django.views.generic import View
+# from django.views.generic import TemplateView
+# from django.views.generic import FormView
+# from django.views.generic import UpdateView
+# from django.views.generic import DeleteView
+
+# from django.contrib.auth.mixins import LoginRequiredMixin
+# from django.contrib.auth.mixins import PermissionRequiredMixin
+# from django.contrib.auth.mixins import UserPassesTestMixin
+# from django.contrib.auth.mixins import AccessMixin
+
+# from django.contrib.auth.models import User
+# from django.contrib.auth.models import Group
+# from django.contrib.auth.models import Permission
+
+# from django.contrib.auth.decorators import login_required
+# from django.contrib.auth.decorators import permission_required
+# from django.contrib.auth.decorators import user_passes_test
+# from django.contrib.auth import authenticate, login, logout
+# from django.contrib.auth import update_session_auth_hash
+# from django.contrib.auth import get_user_model
+# from django.contrib.auth import REDIRECT_FIELD_NAME
+# from django.contrib.auth import views as auth_views
+
+# from django.contrib.auth.forms import UserCreationForm
+# from django.contrib.auth.forms import AuthenticationForm
+# from django.contrib.auth.forms import PasswordChangeForm
+
+# from django.contrib.auth.views import LoginView
+# from django.contrib.auth.views import LogoutView
+# from django.contrib.auth.views import PasswordChangeView
+# from django.contrib.auth.views import PasswordChangeDoneView
+# from django.contrib.auth.views import PasswordResetView
+# from django.contrib.auth.views import PasswordResetDoneView
+# from django.contrib.auth.views import PasswordResetConfirmView
+# from django.contrib.auth.views import PasswordResetCompleteView
+
+
+# from django.contrib import messages
+# from django.contrib.messages.views import SuccessMessageMixin
+# from django.contrib.messages.views import messages as messages_views
+
+# from django.utils.translation import gettext_lazy as _
+
+# from django.utils.decorators import method_decorator
+# from django.utils.decorators import classonlymethod
+# from django.utils.decorators import decorator_from_middleware
+
+# from django.utils.http import is_safe_url
+# from django.utils.http import url_has_allowed_host_and_scheme
+# from django.utils.http import urlencode
+# from django.utils.http import urlquote
+# from django.utils.http import urlunquote
+# from django.utils.http import urlunquote_plus
+# from django.utils.http import urlquote_plus
+# from django.utils.http import base36_to_int
+# from django.utils.http import int_to_base36
+# from django.utils.http import cookie_date
+# from django.utils.http import http_date
+# from django.utils.http import parse_http_date
+# from django.utils.http import parse_etags
+# from django.utils.http import quote_etag
+
+# from django.utils.six.moves.urllib.parse import urlparse
+# from django.utils.six.moves.urllib.parse import urlsplit
+# from django.utils.six.moves.urllib.parse import urlunsplit
+
+
+# from django.utils.module_loading import import_string
+# from django.utils.module_loading import module_has_submodule
+
+
+# from django.utils.text import capfirst
+# from django.utils.text import get_text_list
+# from django.utils.text import slugify
+
 
 def index(request):
     return render(request, 'research_support/index.html')

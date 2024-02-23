@@ -5,6 +5,10 @@ urlpatterns = [
     path('', views.index, name='index'),
     # path('research-support/', views.index, name='index'),
     path('about/', views.about, name='about'),
+    # path('contact/', views.contact, name='contact'),
+    path('delete-pdf/<int:document_id>/', views.delete_pdf, name='delete_pdf'),
+
+
     path('search/', views.search, name='search'),
     path('upload/', views.upload, name='upload'),
     path('document/<int:document_id>/', views.document, name='document'),

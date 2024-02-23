@@ -21,7 +21,7 @@ __pycache__/
 *.pyc
 db.sqlite3
 .env
-media/
+# media/
 
 # Byte-compiled / optimized / DLL files
 
@@ -77,7 +77,7 @@ htmlcov/
 
 
 # Media files
-media/
+# media/
 
 # Virtual environment
 my_life_env/
