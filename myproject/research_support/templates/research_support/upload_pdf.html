@@ -3,11 +3,19 @@
 
 {% block content %}
     <h2>Upload New PDF</h2>
-    <p>Select a PDF file to upload.</p>
+    <p>Upload a PDF either via URL or by directly uploading a file.</p>
 
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Upload PDF</button>
+        <h3>Upload via URL</h3>
+        {{ url_form.as_p }}
+        <button type="submit" name="url_submit" class="btn btn-primary">Upload via URL</button>
+    </form>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <h3>Upload File</h3>
+        {{ file_form.as_p }}
+        <button type="submit" name="file_submit" class="btn btn-secondary">Upload File</button>
     </form>
 {% endblock %}

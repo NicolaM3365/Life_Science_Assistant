@@ -1,0 +1,20 @@
+{% extends "research_support/base.html" %}
+{% load static %}
+
+{% block content %}
+    <h2>Analysis Results for {{ pdf.file_name }}</h2>
+
+    <!-- Display the analysis results here -->
+    {% if results %}
+        <div class="analysis-results">
+            <!-- Iterate over the results and display them -->
+            {% for result in results %}
+                <p>{{ result.some_detail }}</p> <!-- Replace with actual result details -->
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No results available.</p>
+    {% endif %}
+
+    <a href="{% url 'pdfs' %}" class="btn btn-primary">Back to PDF List</a>
+{% endblock %}

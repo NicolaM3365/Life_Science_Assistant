@@ -15,6 +15,9 @@ import dj_database_url
 from pathlib import Path
 
 
+PDF_AI_API_KEY = os.environ.get('PDF_AI_API_KEY')
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -65,7 +68,7 @@ ROOT_URLCONF = 'myproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'research_support', 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

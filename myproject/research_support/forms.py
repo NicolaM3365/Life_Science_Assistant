@@ -73,6 +73,73 @@ class UploadForm(forms.Form):
 
 
 
+class UploadPDFUrlForm(forms.Form):
+    url = forms.URLField(label='PDF URL', required=True)
+    isPrivate = forms.BooleanField(label='Is Private', required=False, initial=False)
+    ocr = forms.BooleanField(label='Enable OCR', required=False, initial=False)
+
+
+class UploadPDFForm(forms.Form):
+    file = forms.FileField(label='PDF File', required=True)
+    isPrivate = forms.BooleanField(label='Is Private', required=False, initial=False)
+    ocr = forms.BooleanField(label='Enable OCR', required=False, initial=False)
+
+
+
+
+
+
+
+
+
+
+
+
+
+class PDFAnalysisForm(forms.Form):
+    ANALYSIS_CHOICES = [
+        ('text_extraction', 'Text Extraction'),
+        ('ocr', 'Optical Character Recognition (OCR)'),
+        ('content_summarization', 'Content Summarization'),
+        ('data_extraction', 'Data Extraction'),
+        ('document_classification', 'Document Classification'),
+        ('sentiment_analysis', 'Sentiment Analysis'),
+    ]
+
+    analysis_type = forms.ChoiceField(choices=ANALYSIS_CHOICES, required=True)
+
+# forms.py
+
+# forms.py
+
+
+class ChatForm(forms.Form):
+    message = forms.CharField(
+        label='Your Message',
+        max_length=1000,  # Adjust the max_length as needed
+        widget=forms.Textarea(attrs={'placeholder': 'Type your message here...'}),
+        required=True
+    )
+
+    save_chat = forms.BooleanField(
+        label='Save Chat History',
+        required=False,  # This field is not mandatory
+        initial=False
+    )
+
+    language = forms.ChoiceField(
+        label='Response Language',
+        choices=[('en', 'English'), ('fr', 'French'), ('es', 'Spanish'), ...],  # Add more languages as needed
+        required=False,
+        initial='en'
+    )
+
+    use_gpt4 = forms.BooleanField(
+        label='Use GPT-4 Model',
+        required=False,
+        initial=False
+    )
+
 
 
 

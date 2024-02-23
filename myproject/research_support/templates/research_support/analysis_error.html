@@ -1,0 +1,21 @@
+{% extends "research_support/base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Analysis Error</h2>
+        
+        <!-- Displaying the error message -->
+        {% if error %}
+            <div class="alert alert-danger">
+                <strong>Error:</strong> {{ error }}
+            </div>
+        {% else %}
+            <p>An unknown error occurred during the analysis process.</p>
+        {% endif %}
+
+        <!-- Link to go back or retry -->
+        <a href="{% url 'analyze_pdf' pdf.file_name %}" class="btn btn-primary">Try Again</a>
+        <a href="{% url 'pdfs' %}" class="btn btn-secondary">Back to PDFs</a>
+    </div>
+{% endblock %}

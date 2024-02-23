@@ -1,0 +1,15 @@
+{% extends "research_support/base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Chat with PDFs</h2>
+        <p>Ask questions and get insights from your uploaded PDFs.</p>
+        <form method="post" class="form-group">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Send Message</button>
+        </form>
+    </div>
+{% endblock %}
+

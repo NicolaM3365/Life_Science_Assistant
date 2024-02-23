@@ -1,0 +1,27 @@
+{% extends "research_support/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Upload PDF to AI PDF API</h2>
+    <p>Use this form to upload a PDF either via URL or by directly uploading a file.</p>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- URL Upload Form -->
+        <div class="form-group">
+            <label for="url">PDF URL:</label>
+            <input type="url" name="url" id="url" class="form-control" placeholder="Enter PDF URL">
+        </div>
+        <button type="submit" name="url_submit" class="btn btn-primary">Upload via URL</button>
+
+        <!-- File Upload Form -->
+        <div class="form-group">
+            <label for="file">PDF File:</label>
+            <input type="file" name="file" id="file" class="form-control">
+        </div>
+        <button type="submit" name="file_submit" class="btn btn-secondary">Upload File</button>
+    </form>
+</div>
+{% endblock %}
