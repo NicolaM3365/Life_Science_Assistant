@@ -1,12 +1,14 @@
 import os
 import requests
-from django.shortcuts import render, get_object_or_404, HttpResponseRedirect
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponseRedirect, HttpResponseServerError, HttpResponse
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from django.db.models import Q
 from django.contrib import messages
+import logging
+
 
 from .models import PDF, Document, Image, Summary, Tag, Related, Vector, QA, Feedback, Query
 from .forms import (
@@ -14,6 +16,11 @@ from .forms import (
     QAForm, FeedbackForm, QueryForm, SearchForm, UploadForm, PDFForm,
     ChatForm, PDFAnalysisForm, UploadPDFUrlForm, UploadPDFForm
 )
+
+# Set up logging (you can configure it more appropriately for your project)
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 
 def handle_upload_response(request, upload_type, response):
     if response.status_code == 200:
@@ -95,7 +102,7 @@ def download_pdf(request, file_name):
 def delete_pdf(request, file_name):
     pdf = PDF.objects.get(file_name=file_name)
     pdf.delete()
-    return HttpResponseRedirect('/pdfs/')
+    return HttpResponseRedirect('pdfs/')
 
 def search(request):
     if request.method == 'POST':
@@ -149,6 +156,8 @@ def upload_pdf(request):
             file_form = UploadPDFForm(request.POST, request.FILES)
             url_form = UploadPDFUrlForm()
             if file_form.is_valid():
+                if 'file' in request.FILES:
+                    logger.info("File is present in the request.")
                 # Handle file upload
                 response = upload_pdf_to_ai_pdf_api(file_form.cleaned_data, upload_type='file')
                 return handle_upload_response(response, request)
@@ -174,23 +183,36 @@ def upload_pdf_to_ai_pdf_api(data, upload_type):
         response = requests.post(api_url, json=payload, headers=headers)
     else:  # upload_type == 'file'
         files = {'file': data['file']}
-        payload = {'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
-        response = requests.post(api_url, files=files, data=payload, headers=headers)
+        form_data = {'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
+        logger.info(f"File name: {data['file'].name}, File size: {data['file'].size}")
+        response = requests.post(api_url, files=files, data=form_data, headers=headers)
     
     return response
+
+def upload_error(request):
+    # The error handling logic goes here (you might want to customize this)
+    # Since this view might not be directly called with context, you may want to handle no context case.
+    error_message = request.GET.get('error', 'An unknown error occurred.')
+    return render(request, 'upload_error.html', {'error': error_message})
+
+
+
 
 def handle_upload_response(response, request):
     if response.status_code == 200:
         # Handle successful upload
         # You can redirect to a success page or another appropriate page
-        return HttpResponseRedirect('success_url')
+        return HttpResponseRedirect('success/')
         
     else:
-        # Handle upload error
-        # You can render an error page or pass error information to the template
-        return render(request, 'upload_error.html', {'error': response.text})
-    
-       
+        # Log or print the response for debugging
+        logger.error(f"API call failed. Status Code: {response.status_code}, Response: {response.text}")
+        # You can also use print for quick debugging (not recommended for production)
+        # print(f"Upload failed. Status Code: {response.status_code}. Response: {response.text}")
+
+        # Use render to display the error page along with the error message
+        return render(request, 'research_support/upload_error.html', {'error': response.text})
+
 
 def chat_with_pdfs(request):
     if request.method == 'POST':

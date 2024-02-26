@@ -38,7 +38,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', os.environ.get('RENDER_HOSTNAME', '')
 
 INSTALLED_APPS = [
 
-   'research_support.apps.ResearchSupportConfig',
+    'research_support.apps.ResearchSupportConfig',
     'users.apps.UsersConfig',
     "crispy_forms", #Updated here
     "crispy_bootstrap5", #Updated here
@@ -101,8 +101,15 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 
 
 
+
 DATABASES = {
-    'default': dj_database_url.parse('postgresql://life_research_assistant_user:VrK6GcQ1sirpikHz84A3fyc2pYbj0zuS@dpg-cnb6jnol5elc7399qq00-a.frankfurt-postgres.render.com/life_research_assistant', conn_max_age=600)
+    
+    'default': dj_database_url.parse(
+        'postgresql://life_research_assistant_user:VrK6GcQ1sirpikHz84A3fyc2pYbj0zuS'
+        '@dpg-cnb6jnol5elc7399qq00-a.frankfurt-postgres.render.com/life_research_assistant?sslmode=require',
+        conn_max_age=600,
+        ssl_require=True  # Add this parameter
+    )
 }
 
 
