@@ -150,6 +150,7 @@ def upload_pdf(request):
             file_form = UploadPDFForm()
             if url_form.is_valid():
                 # Handle URL upload
+                logger.debug(f"Request.FILES content: {request.FILES}")
                 response = upload_pdf_to_ai_pdf_api(url_form.cleaned_data, upload_type='url')
                 return handle_upload_response(response, request)
         elif 'file_submit' in request.POST:
@@ -165,7 +166,9 @@ def upload_pdf(request):
         url_form = UploadPDFUrlForm()
         file_form = UploadPDFForm()
 
+
     # If the request method is not POST or form submission is not valid, render the form
+    logger.debug(f"Request.FILES: {request.FILES}")
     return render(request, 'research_support/upload_pdf.html', {'url_form': url_form, 'file_form': file_form})
 
 def upload_pdf_to_ai_pdf_api(data, upload_type):
@@ -186,6 +189,9 @@ def upload_pdf_to_ai_pdf_api(data, upload_type):
         form_data = {'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
         logger.info(f"File name: {data['file'].name}, File size: {data['file'].size}")
         response = requests.post(api_url, files=files, data=form_data, headers=headers)
+
+    logger.debug(f"Form data being sent: {form_data}")
+    logger.debug(f"Files being sent: {files}")
     
     return response
 
@@ -193,7 +199,7 @@ def upload_error(request):
     # The error handling logic goes here (you might want to customize this)
     # Since this view might not be directly called with context, you may want to handle no context case.
     error_message = request.GET.get('error', 'An unknown error occurred.')
-    return render(request, 'upload_error.html', {'error': error_message})
+    return render(request, 'research_support/upload_error.html', {'error': error_message})
 
 
 
@@ -220,11 +226,11 @@ def chat_with_pdfs(request):
         if form.is_valid():
             message = form.cleaned_data['message']
             response = send_chat_request(message)
-            return render(request, 'chat_response.html', {'response': response})
+            return render(request, 'research_support/chat_response.html', {'response': response})
     else:
         form = ChatForm()
 
-    return render(request, 'chat_with_pdfs.html', {'form': form})
+    return render(request, 'research_support/chat_with_pdfs.html', {'form': form})
 
 def send_chat_request(message):
     api_url = 'https://pdf.ai/api/v1/chat-all'

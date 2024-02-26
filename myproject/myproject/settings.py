@@ -174,3 +174,23 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER'] # Login email address, Stored as an environment varaible
 EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD'] # App Password set from gmail, Stored as an environment varaible
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'research_support.views': {
+            'handlers': ['console'],
+            'level': 'DEBUG',  # Ensure this is set to capture DEBUG level messages
+            'propagate': True,
+        },
+    },
+}

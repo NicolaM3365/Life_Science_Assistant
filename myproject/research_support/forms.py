@@ -127,12 +127,12 @@ class ChatForm(forms.Form):
         initial=False
     )
 
-    language = forms.ChoiceField(
-        label='Response Language',
-        choices=[('en', 'English'), ('fr', 'French'), ('es', 'Spanish'), ...],  # Add more languages as needed
-        required=False,
-        initial='en'
-    )
+    # language = forms.ChoiceField(
+    #     label='Response Language',
+    #     choices=[('en', 'English'), ('fr', 'French'), ('es', 'Spanish'), ...],  # Add more languages as needed
+    #     required=False,
+    #     initial='en'
+    # )
 
     use_gpt4 = forms.BooleanField(
         label='Use GPT-4 Model',

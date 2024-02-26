@@ -16,12 +16,10 @@ urlpatterns = [
     # In urls.py
 
     path('delete-pdf/<str:file_name>/', views.delete_pdf, name='delete_pdf'),
-    path('upload-pdf/', views.upload_pdf, name='upload_pdf'),
 
 
 
     path('search/', views.search, name='search'),
-    path('upload-pdf', views.upload_pdf, name='upload_pdf'),
     path('upload-pdf-to-ai-pdf-api/', views.upload_pdf_to_ai_pdf_api, name='upload_pdf_to_ai_pdf_api'),
     path('pdfs/', views.pdfs, name='pdfs'),
     path('success/', views.success_page, name='success_url'),

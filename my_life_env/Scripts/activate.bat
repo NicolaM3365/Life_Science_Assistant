@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\Nicola.Mitchell\OneDrive - LifeScientific\Desktop\Life_Science_Assistant-5\my_life_env
+set VIRTUAL_ENV=C:\Users\nicola.mitchell\Downloads\Life_Science_Assistant-1\my_life_env
 
 if not defined PROMPT set PROMPT=$P$G
 
