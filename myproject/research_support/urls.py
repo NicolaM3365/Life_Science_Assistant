@@ -18,6 +18,7 @@ urlpatterns = [
     path('delete-pdf/<str:file_name>/', views.delete_pdf, name='delete_pdf'),
 
 
+    path('upload-pdf/success/', views.success_page, name='upload_pdf_success'),
 
     path('search/', views.search, name='search'),
     path('upload-pdf-to-ai-pdf-api/', views.upload_pdf_to_ai_pdf_api, name='upload_pdf_to_ai_pdf_api'),

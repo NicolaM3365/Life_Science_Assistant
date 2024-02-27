@@ -180,6 +180,9 @@ def upload_pdf_to_ai_pdf_api(data, upload_type):
         raise ValueError("No API key set for PDF Ai PDF")
     
     headers = {'X-API-Key': api_key}
+     # Initialize the variables to ensure they are defined
+    form_data = {}
+    files = {}
     
     if upload_type == 'url':
         payload = {'url': data['url'], 'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
