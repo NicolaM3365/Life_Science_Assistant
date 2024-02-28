@@ -173,29 +173,39 @@ def upload_pdf(request):
 
 def upload_pdf_to_ai_pdf_api(data, upload_type):
     api_url = 'https://pdf.ai/api/v1/upload/'
-    api_url += 'url' if upload_type == 'url' else 'file'
     api_key = os.environ.get('PDF_AI_API_KEY')
 
     if not api_key:
         raise ValueError("No API key set for PDF Ai PDF")
-    
-    headers = {'X-API-Key': api_key}
-     # Initialize the variables to ensure they are defined
-    form_data = {}
-    files = {}
-    
-    if upload_type == 'url':
-        payload = {'url': data['url'], 'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
-        response = requests.post(api_url, json=payload, headers=headers)
-    else:  # upload_type == 'file'
-        files = {'file': data['file']}
-        form_data = {'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
-        logger.info(f"File name: {data['file'].name}, File size: {data['file'].size}")
-        response = requests.post(api_url, files=files, data=form_data, headers=headers)
 
-    logger.debug(f"Form data being sent: {form_data}")
-    logger.debug(f"Files being sent: {files}")
-    
+    headers = {'X-API-Key': api_key}
+
+    if upload_type == 'url':
+        # For URL uploads, construct the payload with the URL and additional parameters
+        payload = {'url': data.get('url'), 'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
+        response = requests.post(api_url + 'url', json=payload, headers=headers)
+    elif upload_type == 'file':
+        # For file uploads, prepare the file in the `files` parameter
+        # Ensure `data['file']` is the file object from Django's request.FILES
+        file_obj = data.get('file')  # Assuming 'file' is the key in `request.FILES`
+        if file_obj:
+            files = {'file': (file_obj.name, file_obj, 'application/pdf')}
+            # Additional parameters can be included in the `data` argument if required by the API
+            form_data = {'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
+            response = requests.post(api_url + 'file', files=files, data=form_data, headers=headers)
+            logger.info(f"File name: {file_obj.name}, File size: {file_obj.size}")
+        else:
+            logger.error("File object not found in data")
+            return None  # Or handle error as appropriate
+
+    else:
+        logger.error(f"Invalid upload type: {upload_type}")
+        return None  # Or handle error as appropriate
+
+    # Debug information
+    logger.debug(f"Response status code: {response.status_code}")
+    logger.debug(f"Response content: {response.content}")
+
     return response
 
 def upload_error(request):
