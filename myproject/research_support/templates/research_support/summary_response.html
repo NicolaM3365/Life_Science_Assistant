@@ -1,0 +1,21 @@
+{% extends "research_support/base.html" %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Summary Response</h2>
+        
+        <!-- Display the response from the API -->
+        {% if response %}
+            <div class="response-section">
+                <h4>Response:</h4>
+                <p>{{ response }}</p>  <!-- Assuming the response is a simple text. Adjust if it's more complex -->
+            </div>
+        {% else %}
+            <p>No response received or there was an error.</p>
+        {% endif %}
+
+        <!-- Link to go back to the chat form -->
+        <a href="{% url 'summarize_pdfs' %}" class="btn btn-primary">Ask Another Question</a>
+    </div>
+{% endblock %}

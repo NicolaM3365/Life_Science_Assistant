@@ -1,7 +1,8 @@
 import os
 import requests
+from django.http import JsonResponse
 from django.http import HttpResponseRedirect, HttpResponseServerError, HttpResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
@@ -144,6 +145,35 @@ def update_pdf(request, file_name):
 
 def upload_pdf(request):
     if request.method == 'POST':
+        form = UploadPDFForm(request.POST, request.FILES)
+        if form.is_valid():
+            upload_response = upload_pdf_to_ai_pdf_api(form.cleaned_data, upload_type='file')
+            if upload_response.get('success'):
+                # Redirect to a page where the user can choose to chat or summarize
+                return redirect('pdf_options', doc_id=upload_response.get('docId'))
+            else:
+                # Handle upload failure
+                # Handle upload failure
+                error_message = upload_response.get('error', 'There was a problem with the upload. Please try again.')
+                messages.error(request, error_message)
+        else:
+            # Form is not valid
+            # Form is not valid
+            messages.error(request, 'The form is invalid. Please check your input.')
+
+    else:
+        form = UploadPDFForm()
+    return render(request, 'research_support/upload_pdf.html', {'form': form})
+
+def pdf_options(request, doc_id):
+    # Store doc_id in the session
+    request.session['doc_id'] = doc_id
+    # Render a template that offers buttons/links to chat or summarize the PDF
+    return render(request, 'research_support/pdf_options.html', {'doc_id': doc_id})
+
+
+def upload_pdf(request):
+    if request.method == 'POST':
         # Check which form is being submitted
         if 'url_submit' in request.POST:
             url_form = UploadPDFUrlForm(request.POST)
@@ -234,6 +264,7 @@ def handle_upload_response(response, request):
 
 
 def chat_with_pdfs(request):
+    doc_id = request.session.get('doc_id')
     if request.method == 'POST':
         form = ChatForm(request.POST)
         if form.is_valid():
@@ -265,5 +296,46 @@ def send_chat_request(message):
         return response.json()  # Assuming the API returns a JSON response
     else:
         return {'error': 'Unable to process the request'}
+
+    
+def summarize_pdf(request):
+        doc_id = request.POST.get('doc_id')  # or request.POST.get('doc_id') depending on your form method
+        if request.method == 'POST':
+            form = SummaryForm(request.POST)
+            if form.is_valid():
+                doc_id = form.cleaned_data['doc_id']
+                summary = form.cleaned_data['summary']
+                response = send_summary_request(summary, doc_id)
+                if response.get('error'):
+                    return render(request, 'research_support/summarize_pdf.html', {'form': form, 'error': response['error']})
+
+                else:
+                    return render(request, 'research_support/summary_response.html', {'response': response})
+        else:
+            form = SummaryForm()
+        return render(request, 'research_support/summarize_pdf.html', {'form': form, doc_id: doc_id})
+    
+def send_summary_request(summary):
+        api_url = 'https://pdf.ai/api/v1/summary/'
+        api_key = os.environ.get('PDF_AI_API_KEY')
+    
+        if not api_key:
+            raise ValueError("No API key set for PDF Ai PDF")
+    
+        payload = {
+            'docId': doc_id,
+            'summary': summary,
+            'save_summary': True,  # or False, based on your requirement
+            # Add other parameters as needed
+        }
+        headers = {'X-API-Key': api_key}
+        
+        response = requests.post(api_url, json=payload, headers=headers)
+        
+        if response.status_code == 200:
+            return response.json()
+    
+        else:
+            return {'error': 'Unable to process the request'}
 
 
