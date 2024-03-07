@@ -143,27 +143,27 @@ def update_pdf(request, file_name):
         'form': form
     })
 
-def upload_pdf(request):
-    if request.method == 'POST':
-        form = UploadPDFForm(request.POST, request.FILES)
-        if form.is_valid():
-            upload_response = upload_pdf_to_ai_pdf_api(form.cleaned_data, upload_type='file')
-            if upload_response.get('success'):
-                # Redirect to a page where the user can choose to chat or summarize
-                return redirect('pdf_options', doc_id=upload_response.get('docId'))
-            else:
-                # Handle upload failure
-                # Handle upload failure
-                error_message = upload_response.get('error', 'There was a problem with the upload. Please try again.')
-                messages.error(request, error_message)
-        else:
-            # Form is not valid
-            # Form is not valid
-            messages.error(request, 'The form is invalid. Please check your input.')
+# def upload_pdf(request):
+#     if request.method == 'POST':
+#         form = UploadPDFForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             upload_response = upload_pdf_to_ai_pdf_api(form.cleaned_data, upload_type='file')
+#             if upload_response.get('success'):
+#                 # Redirect to a page where the user can choose to chat or summarize
+#                 return redirect('pdf_options', doc_id=upload_response.get('docId'))
+#             else:
+#                 # Handle upload failure
+#                 # Handle upload failure
+#                 error_message = upload_response.get('error', 'There was a problem with the upload. Please try again.')
+#                 messages.error(request, error_message)
+#         else:
+#             # Form is not valid
+#             # Form is not valid
+#             messages.error(request, 'The form is invalid. Please check your input.')
 
-    else:
-        form = UploadPDFForm()
-    return render(request, 'research_support/upload_pdf.html', {'form': form})
+#     else:
+#         form = UploadPDFForm()
+#     return render(request, 'research_support/upload_pdf.html', {'form': form})
 
 def pdf_options(request, doc_id):
     # Store doc_id in the session
