@@ -2,6 +2,15 @@
     {% extends "research_support/base.html" %}
 
     {% block content %}
+
+    <h1 class="mt-4">Research Support</h1>
+    <p> Look for an "Upload" button or link, which might be represented by an icon (such as an upward arrow or cloud symbol).
+      Click on the "Upload" button. A file selection dialog will appear, allowing you to choose the file(s) you want to upload from your computer.
+      Select the PDF file you wish to upload and click "Open" or "OK" in the file selection dialog. Your file will start uploading.
+      Wait for the upload to complete. The time it takes will depend on the size of the file and your internet connection speed.
+      After the upload is complete, your file will be visible in your myaidrive.com account. You can now share the link to the file with others or access it from anywhere when needed.
+      Remember, myaidrive.com allows for practically unlimited document uploads, and files can be up to 2 GB each, making it a very convenient option for storing and sharing large PDF files. For additional features like automatic OCR of files and data extraction, consider upgrading to a Pro account.</p>
+
     {% for post in posts %}
         <article class="media content-section">
           <img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}">

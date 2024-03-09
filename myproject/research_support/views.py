@@ -143,33 +143,13 @@ def update_pdf(request, file_name):
         'form': form
     })
 
-# def upload_pdf(request):
-#     if request.method == 'POST':
-#         form = UploadPDFForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             upload_response = upload_pdf_to_ai_pdf_api(form.cleaned_data, upload_type='file')
-#             if upload_response.get('success'):
-#                 # Redirect to a page where the user can choose to chat or summarize
-#                 return redirect('pdf_options', doc_id=upload_response.get('docId'))
-#             else:
-#                 # Handle upload failure
-#                 # Handle upload failure
-#                 error_message = upload_response.get('error', 'There was a problem with the upload. Please try again.')
-#                 messages.error(request, error_message)
-#         else:
-#             # Form is not valid
-#             # Form is not valid
-#             messages.error(request, 'The form is invalid. Please check your input.')
-
-#     else:
-#         form = UploadPDFForm()
-#     return render(request, 'research_support/upload_pdf.html', {'form': form})
 
 def pdf_options(request, doc_id):
     # Store doc_id in the session
     request.session['doc_id'] = doc_id
     # Render a template that offers buttons/links to chat or summarize the PDF
     return render(request, 'research_support/pdf_options.html', {'doc_id': doc_id})
+
 
 
 def upload_pdf(request):
@@ -262,8 +242,67 @@ def handle_upload_response(response, request):
         # Use render to display the error page along with the error message
         return render(request, 'research_support/upload_error.html', {'error': response.text})
 
+def get_all_pdfs(request):
+    api_key = os.environ.get('PDF_AI_API_KEY')
+    if not api_key:
+        return HttpResponse("API key for PDF.AI is not configured properly in the environment variables.", status=500)
+        # raise ValueError("No API key set for PDF Ai PDF")   
+    pdfs = get_all_pdfs_from_ai_pdf_api(api_key)
+    
+    # Check if the response from the helper function contains an error
+    if 'error' in pdfs:
+        # Pass the error message to the template for user-friendly feedback
+        return render(request, 'research_support/error.html', {'error': pdfs['error']})
+    else:
+        # Render the PDFs using the template
+        return render(request, 'research_support/pdfs.html', {'pdfs': pdfs})
 
-def chat_with_pdfs(request):
+def get_all_pdfs_from_ai_pdf_api(api_key):
+    url = "https://pdf.ai/api/v1/documents"
+    headers = {
+        "X-API-KEY":api_key
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.json() ['data']
+    else:
+        print(f"Error fetching documents: {response.status_code}")
+        return {"error": f"Failed to get documents, status code: {response.status_code}"}
+
+
+def get_pdf_from_ai_pdf_api(api_key, doc_id):
+    # Construct the request URL using the document ID
+    url = f"https://pdf.ai/api/v1/documents/{doc_id}"
+    headers = {"X-API-KEY": api_key}
+    
+    # Make the GET request to the API
+    response = requests.get(url, headers=headers)
+    
+    # Check the response status code
+    if response.status_code == 200:
+        # Return the document's details if the request was successful
+        return response.json()
+    else:
+        # Log or handle errors as appropriate
+        print(f"Error fetching document {doc_id}: {response.status_code}")
+        return {"error": f"Failed to get document {doc_id}, status code: {response.status_code}"}
+
+# Django view function to display the details of a specific PDF document
+def get_pdf(request, doc_id):
+    api_key = os.environ.get('PDF_AI_API_KEY')
+    if not api_key:
+        # Provide a user-friendly error message if the API key is missing
+        return HttpResponse("API key for PDF.AI is not configured properly in the environment variables.", status=500)
+    
+    pdf_details = get_pdf_from_ai_pdf_api(api_key, doc_id)
+    if 'error' in pdf_details:
+        # Render an error template if there was an issue fetching the document
+        return render(request, 'research_support/error.html', {'error': pdf_details['error']})
+    
+    # Render a template to display the PDF details, assuming 'pdf_detail.html' is set up for this purpose
+    return render(request, 'research_support/pdf_detail.html', {'pdf': pdf_details})
+
+def chat_with_pdf(request):
     doc_id = request.session.get('doc_id')
     if request.method == 'POST':
         form = ChatForm(request.POST)
@@ -276,66 +315,152 @@ def chat_with_pdfs(request):
 
     return render(request, 'research_support/chat_with_pdfs.html', {'form': form})
 
-def send_chat_request(message):
-    api_url = 'https://pdf.ai/api/v1/chat-all'
+def send_chat_request(message): 
+    api_url = 'https://pdf.ai/api/v1/chat/{doc_id}'
     api_key = os.environ.get('PDF_AI_API_KEY')
+    if  not api_key:
+        raise ValueError("No API key set for PDF Ai PDF")       
 
+    payload = {
+        'message': message,
+        'save_chat': True, # or False, based on your requirement
+        # Add other parameters as needed
+        'use_gpt4': True, # or False, based on your requirement
+        'language': 'en', # or 'es', 'fr', 'de', 'it', 'pt', 'nl', 'pl', 'ru', 'ja', 'ko', 'zh', 'ar', 'tr', 'he', 'id', 'th', 'vi', 'hi', 'bn', 'fa', 'ur', 'ms', 'fil', 'ta', 'te', 'ml', 'kn', 'mr', 'gu', 'pa', 'si', 'my', 'km', 'lo', 'ne
+    }
+    headers = {'X-API-Key': api_key}    
+    response = requests.post(api_url, json=payload, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {'error': 'Unable to process the request'}
+
+
+
+def send_chat_all_request(message):
+    api_url = 'https://pdf.ai/api/v1/chat-all/'
+    api_key = os.environ.get('PDF_AI_API_KEY')
     if not api_key:
         raise ValueError("No API key set for PDF Ai PDF")
-
     payload = {
         'message': message,
         'save_chat': True,  # or False, based on your requirement
         # Add other parameters as needed
+        'use_gpt4': True,  # or False, based on your requirement
+        'language': 'en',  # or 'es', 'fr', 'de', 'it', 'pt', 'nl', 'pl', 'ru', 'ja', 'ko', 'zh', 'ar', 'tr', 'he', 'id', 'th', 'vi', 'hi', 'bn', 'fa', 'ur', 'ms', 'fil', 'ta', 'te', 'ml', 'kn', 'mr', 'gu', 'pa', 'si', 'my', 'km', 'lo', 'ne
     }
     headers = {'X-API-Key': api_key}
-    
     response = requests.post(api_url, json=payload, headers=headers)
-    
     if response.status_code == 200:
-        return response.json()  # Assuming the API returns a JSON response
+        return response.json()
     else:
         return {'error': 'Unable to process the request'}
-
+       
     
+
+def send_summary_request(api_key, doc_id, language=None):
+    url = "https://pdf.ai/api/v1/summary"
+    headers = {
+        "X-API-Key":api_key
+    }
+    payload = {
+        "docId": doc_id,
+    }
+     # Optionally add the language to the payload if specified
+    if language:
+        payload['language'] = language
+
+    response = requests.post(url, json=payload, headers=headers)
+    if response.status_code == 200:
+        return response.json() ['data']
+    else:
+        return {"error": f"Failed to summarize document, status code: {response.status_code}"}
+
 def summarize_pdf(request):
-        doc_id = request.POST.get('doc_id')  # or request.POST.get('doc_id') depending on your form method
-        if request.method == 'POST':
-            form = SummaryForm(request.POST)
-            if form.is_valid():
-                doc_id = form.cleaned_data['doc_id']
-                summary = form.cleaned_data['summary']
-                response = send_summary_request(summary, doc_id)
-                if response.get('error'):
-                    return render(request, 'research_support/summarize_pdf.html', {'form': form, 'error': response['error']})
+    api_key = os.environ.get('PDF_AI_API_KEY')  # Get the API key from environment variables
+    if not api_key:
+        raise ValueError("API key not found. Please set the PDF_AI_API_KEY environment variable.")
 
-                else:
-                    return render(request, 'research_support/summary_response.html', {'response': response})
-        else:
-            form = SummaryForm()
-        return render(request, 'research_support/summarize_pdf.html', {'form': form, doc_id: doc_id})
+    if request.method == 'POST':
+        form = SummaryForm(request.POST)
+        if form.is_valid():
+            doc_id = form.cleaned_data['doc_id']
+            language = form.cleaned_data.get('language', None)  # Assuming your form has a language field
+            
+            response = send_summary_request(api_key, doc_id, language)
+            
+            if response.get('error'):
+                return render(request, 'research_support/summarize_pdf.html', {'form': form, 'error': response['error']})
+            else:
+                return render(request, 'research_support/summary_response.html', {'response': response})
+    else:
+        form = SummaryForm()
     
-def send_summary_request(summary):
-        api_url = 'https://pdf.ai/api/v1/summary/'
-        api_key = os.environ.get('PDF_AI_API_KEY')
-    
-        if not api_key:
-            raise ValueError("No API key set for PDF Ai PDF")
-    
-        payload = {
-            'docId': doc_id,
-            'summary': summary,
-            'save_summary': True,  # or False, based on your requirement
-            # Add other parameters as needed
-        }
-        headers = {'X-API-Key': api_key}
-        
-        response = requests.post(api_url, json=payload, headers=headers)
-        
-        if response.status_code == 200:
-            return response.json()
-    
-        else:
-            return {'error': 'Unable to process the request'}
+    return render(request, 'research_support/summarize_pdf.html', {'form': form})
+
+def delete_pdf(request, file_name):
+    pdf = PDF.objects.get(file_name=file_name)
+    pdf.delete()
+    return HttpResponseRedirect('pdfs/')
+
+def delete_pdf_from_ai_pdf_api(api_key, doc_id):
+    url = f"https://pdf.ai/api/v1/documents/{doc_id}"
+    headers = {
+        "X-API-KEY":api_key
+    }
+    response = requests.delete(url, headers=headers)
+    if response.status_code == 200:
+        return response.json() ['data']
+    else:
+        return {"error": f"Failed to delete document, status code: {response.status_code}"}
 
 
+
+import requests
+import os
+from django.shortcuts import render
+from .forms import UploadPDFUrlForm, UploadPDFForm  # Ensure these are correctly imported
+import logging
+
+# Set up logging
+logger = logging.getLogger(__name__)
+
+def upload_pdf_and_get_doc_id(request):
+    if request.method == 'POST':
+        # Initialize forms regardless of submission to avoid UnboundLocalError
+        url_form = UploadPDFUrlForm()
+        file_form = UploadPDFForm()
+
+        if 'url_submit' in request.POST:
+            url_form = UploadPDFUrlForm(request.POST)
+            if url_form.is_valid():
+                # Process URL upload and API call
+                response = upload_pdf_to_ai_pdf_api(url_form.cleaned_data, upload_type='url')
+                return handle_upload_response(response, request)
+        elif 'file_submit' in request.POST:
+            file_form = UploadPDFForm(request.POST, request.FILES)
+            if file_form.is_valid() and 'file' in request.FILES:
+                # Process file upload and API call
+                logger.info("File is present in the request.")
+                response = upload_pdf_to_ai_pdf_api(file_form.cleaned_data, upload_type='file')
+                return handle_upload_response(response, request)
+    else:
+        # Initialize forms for GET request
+        url_form = UploadPDFUrlForm()
+        file_form = UploadPDFForm()
+
+    # Log debug information
+    logger.debug(f"Request.FILES: {request.FILES}")
+    # Render the upload forms
+    return render(request, 'research_support/upload_pdf.html', {'url_form': url_form, 'file_form': file_form})
+
+def handle_upload_response(response, request):
+    if response.status_code == 200:
+        # Extract document ID from response, if available
+        doc_id = response.json().get('docId')
+        # Render success template with doc_id, or handle as needed
+        return render(request, 'research_support/upload_success.html', {'doc_id': doc_id})
+    else:
+        # Handle API error
+        logger.error(f"Upload failed with status code: {response.status_code}")
+        return render(request, 'research_support/upload_error.html', {'error': 'Failed to upload PDF. Please try again.'})

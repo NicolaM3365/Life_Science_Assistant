@@ -7,8 +7,23 @@ urlpatterns = [
     path('about/', views.about, name='about'),
     # path('contact/', views.contact, name='contact'),
     path('upload-pdf/', views.upload_pdf, name='upload_pdf'),
+    path('upload-pdf/success/', views.success_page, name='upload_pdf_success'),
+    path('upload-pdf/error/', views.upload_error, name='upload_error'),
+    path('upload-pdf-and-get-doc-id/', views.upload_pdf_and_get_doc_id, name='upload_pdf_and_get_doc_id'),
+    path('get-all-pdfs/', views.get_all_pdfs, name='get_all_pdfs'),
+    path('get-pdf/<str:file_name>/', views.get_pdf, name='get_pdf'),
+    path('get-pdf/success/', views.success_page, name='get_pdf_success'),
+    path('get-pdf/error/', views.upload_error, name='upload_error'),
+
+    path ('summarize-pdf/', views.summarize_pdf, name='summarize_pdf'),
+    path ('summarize-pdf/success/', views.success_page, name='summarize_pdf_success'),
+    path ('summarize-pdf/error/', views.upload_error, name='upload_error'),
+
+    path('delete-pdf/<str:file_name>/', views.delete_pdf, name='delete_pdf'),
+    
     # URL pattern for displaying the chat form
-    path('chat-with-pdfs/', views.chat_with_pdfs, name='chat_with_pdfs'),
+
+    path('chat-with-pdf/', views.chat_with_pdf, name='chat_with_pdf'),
 
     # URL pattern for processing the chat input and displaying the response
     # path('process-chat/', views.process_chat, name='process_chat'),
