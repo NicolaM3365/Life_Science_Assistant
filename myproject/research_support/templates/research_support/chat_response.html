@@ -2,20 +2,27 @@
 {% load static %}
 
 {% block content %}
-    <div class="container mt-4">
-        <h2>Chat Response</h2>
-        
-        <!-- Display the response from the API -->
-        {% if response %}
-            <div class="response-section">
-                <h4>Response:</h4>
-                <p>{{ response }}</p>  <!-- Assuming the response is a simple text. Adjust if it's more complex -->
-            </div>
-        {% else %}
-            <p>No response received or there was an error.</p>
-        {% endif %}
+<div class="container mt-4">
+    <h2>Chat Response</h2>
 
-        <!-- Link to go back to the chat form -->
-        <a href="{% url 'chat_with_pdfs' %}" class="btn btn-primary">Ask Another Question</a>
-    </div>
+    {% if response.content %}
+        <div class="response-section">
+            <h4>Response:</h4>
+            <p>{{ response.content }}</p>
+            {% if response.references %}
+                <h5>References:</h5>
+                <ul>
+                    {% for reference in response.references %}
+                        <li>Page: {{ reference.pageNumber }}, Lines: {{ reference.fromLine }} to {{ reference.toLine }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% else %}
+        <p>No response received or there was an error.</p>
+    {% endif %}
+
+    <!-- Link to go back to the chat form -->
+    <a href="{% url 'chat_with_pdfs' %}" class="btn btn-primary">Ask Another Question</a>
+</div>
 {% endblock %}

@@ -23,42 +23,42 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-def handle_upload_response(request, upload_type, response):
-    if response.status_code == 200:
-        # Handle successful upload
-        # You can redirect to a success page or another appropriate page
-        return HttpResponseRedirect(reverse('success_url'))
+# def handle_upload_response(request, upload_type, response):
+#     if response.status_code == 200:
+#         # Handle successful upload
+#         # You can redirect to a success page or another appropriate page
+#         return HttpResponseRedirect(reverse('success_url'))
 
-    elif response.status_code == 400:
-        # Handle bad request errors
-        # You can render an error page or pass error information to the template
-        error_message = "Bad request error: {}".format(response.text)
-        return HttpResponseServerError(error_message)
+#     elif response.status_code == 400:
+#         # Handle bad request errors
+#         # You can render an error page or pass error information to the template
+#         error_message = "Bad request error: {}".format(response.text)
+#         return HttpResponseServerError(error_message)
 
-    elif response.status_code == 404:
-        # Handle not found errors
-        # You can render an error page or pass error information to the template
-        error_message = "Not found error: {}".format(response.text)
-        return HttpResponseServerError(error_message)
+#     elif response.status_code == 404:
+#         # Handle not found errors
+#         # You can render an error page or pass error information to the template
+#         error_message = "Not found error: {}".format(response.text)
+#         return HttpResponseServerError(error_message)
 
-    elif response.status_code == 413:
-        # Handle file size exceeded errors for file upload
-        if upload_type == 'file':
-            error_message = "File size exceeds the limit (4.5 MB). Please upload a smaller file or use the URL upload method."
-            return HttpResponseServerError(error_message)
-        else:
-            error_message = "Request Entity Too Large: {}".format(response.text)
-            return HttpResponseServerError(error_message)
+#     elif response.status_code == 413:
+#         # Handle file size exceeded errors for file upload
+#         if upload_type == 'file':
+#             error_message = "File size exceeds the limit (4.5 MB). Please upload a smaller file or use the URL upload method."
+#             return HttpResponseServerError(error_message)
+#         else:
+#             error_message = "Request Entity Too Large: {}".format(response.text)
+#             return HttpResponseServerError(error_message)
 
-    elif response.status_code == 504:
-        # Handle timeout errors
-        error_message = "Timeout error: The upload process took too long (300 seconds). Please try again later or use a different upload method."
-        return HttpResponseServerError(error_message)
+#     elif response.status_code == 504:
+#         # Handle timeout errors
+#         error_message = "Timeout error: The upload process took too long (300 seconds). Please try again later or use a different upload method."
+#         return HttpResponseServerError(error_message)
 
-    else:
-        # Handle other errors
-        error_message = "An error occurred during the upload: {}".format(response.text)
-        return HttpResponseServerError(error_message)
+#     else:
+#         # Handle other errors
+#         error_message = "An error occurred during the upload: {}".format(response.text)
+#         return HttpResponseServerError(error_message)
 
 def success_page(request):
     return render(request, 'research_support/success.html')
@@ -189,34 +189,44 @@ def upload_pdf_to_ai_pdf_api(data, upload_type):
         raise ValueError("No API key set for PDF Ai PDF")
 
     headers = {'X-API-Key': api_key}
+    
 
-    if upload_type == 'url':
-        # For URL uploads, construct the payload with the URL and additional parameters
-        payload = {'url': data.get('url'), 'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
-        response = requests.post(api_url + 'url', json=payload, headers=headers)
-    elif upload_type == 'file':
-        # For file uploads, prepare the file in the `files` parameter
-        # Ensure `data['file']` is the file object from Django's request.FILES
-        file_obj = data.get('file')  # Assuming 'file' is the key in `request.FILES`
-        if file_obj:
-            files = {'file': (file_obj.name, file_obj, 'application/pdf')}
-            # Additional parameters can be included in the `data` argument if required by the API
-            form_data = {'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
-            response = requests.post(api_url + 'file', files=files, data=form_data, headers=headers)
-            logger.info(f"File name: {file_obj.name}, File size: {file_obj.size}")
+    try:
+        response = None
+        if upload_type == 'url':
+            payload = {'url': data.get('url'), 'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
+            response = requests.post(api_url + 'url', json=payload, headers=headers)
+        elif upload_type == 'file':
+            file_obj = data.get('file')
+            if file_obj:
+                files = {'file': (file_obj.name, file_obj, 'application/pdf')}
+                form_data = {'isPrivate': data.get('isPrivate', False), 'ocr': data.get('ocr', False)}
+                response = requests.post(api_url + 'file', files=files, data=form_data, headers=headers)
+                logger.info(f"File name: {file_obj.name}, File size: {file_obj.size}")
+            else:
+                logger.error("File object not found in data")
+                return None
+            
+            # Handle the response from the API
+        if response and response.status_code == 200:
+            response_data = response.json()
+            # Log success and return the whole response
+            # Modify the below if you're looking for a specific key in the response JSON
+            document_id = response_data.get('document_id', 'No ID found in response')  # Example key extraction
+            logger.info(f"Document uploaded successfully. Document ID: {document_id}")
+            return response_data  # Return the full response data or just the document ID as needed
         else:
-            logger.error("File object not found in data")
-            return None  # Or handle error as appropriate
+            # Log detailed error information
+            if response:
+                logger.error(f"Failed to upload PDF. Status code: {response.status_code}. Response: {response.text}")
+            else:
+                logger.error("Failed to upload PDF. No response from server.")
+            return None
 
-    else:
-        logger.error(f"Invalid upload type: {upload_type}")
-        return None  # Or handle error as appropriate
-
-    # Debug information
-    logger.debug(f"Response status code: {response.status_code}")
-    logger.debug(f"Response content: {response.content}")
-
-    return response
+    except requests.exceptions.RequestException as e:
+        # Log request errors
+        logger.error(f"Request to PDF AI API failed: {e}")
+        return None
 
 def upload_error(request):
     # The error handling logic goes here (you might want to customize this)
@@ -227,20 +237,20 @@ def upload_error(request):
 
 
 
-def handle_upload_response(response, request):
-    if response.status_code == 200:
-        # Handle successful upload
-        # You can redirect to a success page or another appropriate page
-        return HttpResponseRedirect('success/')
+# def handle_upload_response(response, request):
+#     if response.status_code == 200:
+#         # Handle successful upload
+#         # You can redirect to a success page or another appropriate page
+#         return HttpResponseRedirect('success/')
         
-    else:
-        # Log or print the response for debugging
-        logger.error(f"API call failed. Status Code: {response.status_code}, Response: {response.text}")
-        # You can also use print for quick debugging (not recommended for production)
-        # print(f"Upload failed. Status Code: {response.status_code}. Response: {response.text}")
+#     else:
+#         # Log or print the response for debugging
+#         logger.error(f"API call failed. Status Code: {response.status_code}, Response: {response.text}")
+#         # You can also use print for quick debugging (not recommended for production)
+#         # print(f"Upload failed. Status Code: {response.status_code}. Response: {response.text}")
 
-        # Use render to display the error page along with the error message
-        return render(request, 'research_support/upload_error.html', {'error': response.text})
+#         # Use render to display the error page along with the error message
+#         return render(request, 'research_support/upload_error.html', {'error': response.text})
 
 def get_all_pdfs(request):
     api_key = os.environ.get('PDF_AI_API_KEY')
@@ -315,13 +325,14 @@ def chat_with_pdf(request):
 
     return render(request, 'research_support/chat_with_pdfs.html', {'form': form})
 
-def send_chat_request(message): 
-    api_url = 'https://pdf.ai/api/v1/chat/{doc_id}'
+def send_chat_request(message, doc_id): 
+    api_url = 'https://pdf.ai/api/v1/chat'
     api_key = os.environ.get('PDF_AI_API_KEY')
     if  not api_key:
         raise ValueError("No API key set for PDF Ai PDF")       
 
     payload = {
+        'doc_id': doc_id, # Replace with the actual document ID
         'message': message,
         'save_chat': True, # or False, based on your requirement
         # Add other parameters as needed
@@ -330,11 +341,15 @@ def send_chat_request(message):
     }
     headers = {'X-API-Key': api_key}    
     response = requests.post(api_url, json=payload, headers=headers)
+
     if response.status_code == 200:
         return response.json()
+    elif response.status_code == 401:
+        return {'error': 'Invalid API key'}
+    elif response.status_code == 400:
+        return {'error': 'Bad request - missing API key, docId, or message'}
     else:
-        return {'error': 'Unable to process the request'}
-
+        return {'error': f'Unable to process the request. Status code: {response.status_code}'}
 
 
 def send_chat_all_request(message):
@@ -398,10 +413,22 @@ def summarize_pdf(request):
     
     return render(request, 'research_support/summarize_pdf.html', {'form': form})
 
-def delete_pdf(request, file_name):
-    pdf = PDF.objects.get(file_name=file_name)
-    pdf.delete()
-    return HttpResponseRedirect('pdfs/')
+def delete_pdf(request, doc_id):
+    api_key = 'Your_MyAIDrive_API_Key'  # Ideally, fetch this from a secure place like environment variables
+    result = delete_pdf_from_ai_pdf_api(api_key, doc_id)
+
+    if "message" in result:
+        # If the API returned a success message, redirect to a success page or the list of PDFs
+        messages.success(request, result["message"])
+        return redirect('pdfs_list_url')  # Replace 'pdfs_list_url' with the name of your URL to list PDFs
+    else:
+        # If there was an error, display the error message to the user
+        error_message = result.get("error", "An unknown error occurred.")
+        messages.error(request, error_message)
+        return redirect('pdfs_list_url')  # You might redirect back to where the user was, or to an error page
+
+
+
 
 def delete_pdf_from_ai_pdf_api(api_key, doc_id):
     url = f"https://pdf.ai/api/v1/documents/{doc_id}"
@@ -415,15 +442,6 @@ def delete_pdf_from_ai_pdf_api(api_key, doc_id):
         return {"error": f"Failed to delete document, status code: {response.status_code}"}
 
 
-
-import requests
-import os
-from django.shortcuts import render
-from .forms import UploadPDFUrlForm, UploadPDFForm  # Ensure these are correctly imported
-import logging
-
-# Set up logging
-logger = logging.getLogger(__name__)
 
 def upload_pdf_and_get_doc_id(request):
     if request.method == 'POST':
@@ -455,12 +473,20 @@ def upload_pdf_and_get_doc_id(request):
     return render(request, 'research_support/upload_pdf.html', {'url_form': url_form, 'file_form': file_form})
 
 def handle_upload_response(response, request):
-    if response.status_code == 200:
-        # Extract document ID from response, if available
-        doc_id = response.json().get('docId')
-        # Render success template with doc_id, or handle as needed
-        return render(request, 'research_support/upload_success.html', {'doc_id': doc_id})
-    else:
-        # Handle API error
-        logger.error(f"Upload failed with status code: {response.status_code}")
+    # Check if response is a dictionary and contains an error key
+    if isinstance(response, dict) and "error" in response:
+        # Log the error and render the error template
+        logger.error(f"Upload failed with error: {response['error']}")
         return render(request, 'research_support/upload_error.html', {'error': 'Failed to upload PDF. Please try again.'})
+    
+    # If the response is a dictionary but does not contain an "error" key, it's assumed to be successful
+    elif isinstance(response, dict) and "docId" in response:
+        # Extract document ID from response
+        doc_id = response.get('docId')
+        # Render success template with doc_id
+        return render(request, 'research_support/upload_success.html', {'doc_id': doc_id})
+    
+    else:
+        # Handle unexpected response format
+        logger.error("Unexpected response format received from upload function")
+        return render(request, 'research_support/upload_error.html', {'error': 'Unexpected error occurred. Please try again.'})

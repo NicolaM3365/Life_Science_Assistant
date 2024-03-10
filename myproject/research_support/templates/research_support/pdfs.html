@@ -8,20 +8,21 @@
     {% if pdfs %}
         <ul class="list-group">
             {% for pdf in pdfs %}
-                <li class="list-group-item">
-                    {{ pdf.file_name }}
-                    <a href="{% url 'pdf_detail' pdf.file_name %}" class="btn btn-primary btn-sm float-right">View Details</a>
-                     <!-- Button for Analysis -->
-                     <a href="{% url 'analyze_pdf' pdf.file_name %}" class="btn btn-info btn-sm float-right mr-2">Analyze</a>
-                    <!-- Button to trigger modal -->
-                    <button type="button" class="btn btn-danger btn-sm float-right mr-2 delete-pdf-button" data-toggle="modal" data-target="#deletePdfModal" data-pdf-name="{{ pdf.file_name }}">
-                        Delete
-                    </button>
-                </li>
+            <li class="list-group-item">
+                {{ pdf.file_name }}
+                {% if pdf.docId %}
+                    <a href="{% url 'pdf_detail' pdf.docId %}" class="btn btn-primary btn-sm float-right">View Details</a>
+                    <!-- Button for Analysis -->
+                    <a href="{% url 'analyze_pdf' pdf.docId %}" class="btn btn-info btn-sm float-right mr-2">Analyze</a>
+                {% else %}
+                    <span>PDF ID unavailable</span>
+                {% endif %}
+                <!-- Button to trigger modal, assuming deletion can be handled differently -->
+            </li>
             {% endfor %}
         </ul>
 
-        <!-- The Modal -->
+        <!-- Adjusted Modal for Deletion with docId -->
         <div class="modal" id="deletePdfModal">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -39,8 +40,10 @@
 
                     <!-- Modal footer -->
                     <div class="modal-footer">
-                        <form method="post" action="{% url 'delete_pdf' 'PDF_NAME' %}">
+                        <!-- Updated action to dynamically insert the docId -->
+                        <form method="post" action="">
                             {% csrf_token %}
+                            <input type="hidden" name="docId" value="">
                             <button type="submit" class="btn btn-danger">Delete</button>
                         </form>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -54,11 +57,13 @@
     {% endif %}
 
     <script>
+        // Updated script to handle deletion using docId
         document.querySelectorAll('.delete-pdf-button').forEach(button => {
             button.addEventListener('click', function() {
-                var pdfName = this.getAttribute('data-pdf-name');
-                var formAction = "{% url 'delete_pdf' 'PDF_NAME' %}".replace('PDF_NAME', pdfName);
-                document.querySelector('#deletePdfModal form').action = formAction;
+                var docId = this.getAttribute('data-pdf-id');
+                var form = document.querySelector('#deletePdfModal form');
+                form.action = "{% url 'delete_pdf' 'DUMMY_ID' %}".replace('DUMMY_ID', docId);
+                form.querySelector('input[name="docId"]').value = docId;
             });
         });
     </script>

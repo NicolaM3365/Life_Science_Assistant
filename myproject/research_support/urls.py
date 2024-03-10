@@ -14,6 +14,7 @@ urlpatterns = [
     path('get-pdf/<str:file_name>/', views.get_pdf, name='get_pdf'),
     path('get-pdf/success/', views.success_page, name='get_pdf_success'),
     path('get-pdf/error/', views.upload_error, name='upload_error'),
+    path('pdf-detail/<int:pdf_id>/', views.pdf_detail, name='pdf_detail'),
 
     path ('summarize-pdf/', views.summarize_pdf, name='summarize_pdf'),
     path ('summarize-pdf/success/', views.success_page, name='summarize_pdf_success'),

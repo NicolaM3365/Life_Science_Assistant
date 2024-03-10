@@ -6,6 +6,7 @@ from django.db import models
 
 class PDF(models.Model):
     file_name = models.CharField(max_length=100)
+    doc_id = models.CharField(max_length=255, blank=True, null=True)  # Add this line
     file = models.FileField(upload_to='pdfs/')
     upload_date = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
