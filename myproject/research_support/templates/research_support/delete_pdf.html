@@ -8,6 +8,8 @@
     <form method="post">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">Yes, Delete it</button>
-        <a href="{% url 'pdf_detail' pdf.file_name %}" class="btn btn-secondary">Cancel</a>
+        <a href="{% url 'research_support:pdf_detail' doc_id=doc_id %}" class="btn btn-secondary">Cancel</a>
     </form>
 {% endblock %}
+
+

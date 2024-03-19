@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+app_name = 'research_support'  # Define the namespace
+
 urlpatterns = [
     path('', views.index, name='index'),
     # path('research-support/', views.index, name='index'),
@@ -9,18 +11,18 @@ urlpatterns = [
     path('upload-pdf/', views.upload_pdf, name='upload_pdf'),
     path('upload-pdf/success/', views.success_page, name='upload_pdf_success'),
     path('upload-pdf/error/', views.upload_error, name='upload_error'),
-    path('upload-pdf-and-get-doc-id/', views.upload_pdf_and_get_doc_id, name='upload_pdf_and_get_doc_id'),
+    # path('upload-pdf-and-get-doc-id/', views.upload_pdf_and_get_doc_id, name='upload_pdf_and_get_doc_id'),
     path('get-all-pdfs/', views.get_all_pdfs, name='get_all_pdfs'),
-    path('get-pdf/<str:file_name>/', views.get_pdf, name='get_pdf'),
+    path('get-pdf/<str:doc_id>/', views.get_pdf, name='get_pdf'),
     path('get-pdf/success/', views.success_page, name='get_pdf_success'),
-    path('get-pdf/error/', views.upload_error, name='upload_error'),
-    path('pdf-detail/<int:pdf_id>/', views.pdf_detail, name='pdf_detail'),
+    path('get-pdf/error/', views.upload_error, name='get_pdf_error'),
+    # path('pdf-detail/<int:pdf_id>/', views.pdf_detail, name='pdf_detail'),
 
     path ('summarize-pdf/', views.summarize_pdf, name='summarize_pdf'),
     path ('summarize-pdf/success/', views.success_page, name='summarize_pdf_success'),
-    path ('summarize-pdf/error/', views.upload_error, name='upload_error'),
+    path ('summarize-pdf/error/', views.upload_error, name='summarize_pdf_error'),
 
-    path('delete-pdf/<str:file_name>/', views.delete_pdf, name='delete_pdf'),
+    path('delete-pdf/<str:doc_id>/', views.delete_pdf, name='delete_pdf'),
     
     # URL pattern for displaying the chat form
 
@@ -31,7 +33,6 @@ urlpatterns = [
 
     # In urls.py
 
-    path('delete-pdf/<str:file_name>/', views.delete_pdf, name='delete_pdf'),
 
     # path('upload-pdf-and-get-doc-id/', views.upload_pdf_and_get_doc_id, name='upload_pdf_and_get_doc_id'),
 
@@ -43,7 +44,7 @@ urlpatterns = [
 
     path('search/', views.search, name='search'),
     path('upload-pdf-to-ai-pdf-api/', views.upload_pdf_to_ai_pdf_api, name='upload_pdf_to_ai_pdf_api'),
-    path('pdfs/', views.pdfs, name='pdfs'),
+    # path('pdfs/', views.pdfs, name='pdfs'),
     path('success/', views.success_page, name='success_url'),
     path('upload-error/', views.upload_error, name='upload_error')
 

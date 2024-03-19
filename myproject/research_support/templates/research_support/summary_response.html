@@ -2,20 +2,25 @@
 {% load static %}
 
 {% block content %}
-    <div class="container mt-4">
-        <h2>Summary Response</h2>
-        
-        <!-- Display the response from the API -->
-        {% if response %}
-            <div class="response-section">
-                <h4>Response:</h4>
-                <p>{{ response }}</p>  <!-- Assuming the response is a simple text. Adjust if it's more complex -->
-            </div>
-        {% else %}
-            <p>No response received or there was an error.</p>
-        {% endif %}
+<div class="container mt-4">
+    <h2>Summary Response</h2>
+    
+    <!-- Display the summary result from the API -->
+    {% if summary_result %}
+        <div class="response-section">
+            <h4>Summary:</h4>
+            <p>{{ summary_result }}</p>  <!-- Display the summary content -->
+        </div>
+    {% endif %}
+    
+    <!-- Display any error messages -->
+    {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+    {% endif %}
 
-        <!-- Link to go back to the chat form -->
-        <a href="{% url 'summarize_pdfs' %}" class="btn btn-primary">Ask Another Question</a>
-    </div>
+    <!-- Link to go back to the form for another summary request -->
+    <a href="{% url 'research_support:summarize_pdf' %}" class="btn btn-primary mt-3">Get Another Summary</a>
+</div>
 {% endblock %}

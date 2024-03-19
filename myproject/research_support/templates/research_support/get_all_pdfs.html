@@ -1,0 +1,70 @@
+{% extends "research_support/base.html" %}
+{% load static %}
+
+{% block content %}
+    <h2>Uploaded PDFs</h2>
+    <p>Below is a list of all uploaded PDF files.</p>
+
+    {% if pdfs %}
+        <ul class="list-group">
+            {% for pdf in pdfs %}
+            <li class="list-group-item">
+                {{ pdf.name }}
+                {% if pdf.id %}
+                    <a href="{% url 'research_support:get_pdf' doc_id=pdf.id %}" class="btn btn-primary btn-sm float-right">View Details</a>
+                    <!-- Button for Analysis -->
+                {% else %}
+                    <span>PDF ID unavailable</span>
+                {% endif %}
+                <!-- Button to trigger modal, assuming deletion can be handled differently -->
+            </li>
+            {% endfor %}
+        </ul>
+
+        <!-- Adjusted Modal for Deletion with id -->
+        <div class="modal" id="deletePdfModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h4 class="modal-title">Delete PDF</h4>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+
+                    <!-- Modal body -->
+                    <div class="modal-body">
+                        Are you sure you want to delete this PDF?
+                    </div>
+
+                    <!-- Modal footer -->
+                    <div class="modal-footer">
+                        <!-- Updated action to dynamically insert the id -->
+                        <form method="post" action="">
+                            {% csrf_token %}
+                            <input type="hidden" name="id" value="">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <p>No PDFs have been uploaded yet.</p>
+    {% endif %}
+
+    <script>
+        // Updated script to handle deletion using id
+        document.querySelectorAll('.delete-pdf-button').forEach(button => {
+            button.addEventListener('click', function() {
+                var id = this.getAttribute('data-pdf-id');
+                var form = document.querySelector('#deletePdfModal form');
+                // Dynamically setting the action URL
+                form.action = form.action.replace('DUMMY_ID', id);
+                form.querySelector('input[name="id"]').value = id;
+            });
+        });
+    </script>
+{% endblock %}

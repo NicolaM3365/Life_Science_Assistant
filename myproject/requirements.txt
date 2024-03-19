@@ -4,6 +4,7 @@ crispy-bootstrap5==2023.10
 Pillow==10.1.0
 Gunicorn==20.1.0
 whitenoise==5.3.0
+psycopg2-binary==2.9.9
 psycopg==3.1.18
 dj-database-url==0.5.0
 requests==2.26.0

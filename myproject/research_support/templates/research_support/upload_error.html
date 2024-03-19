@@ -1,6 +1,7 @@
-
 {% extends "research_support/base.html" %}
 {% block content %}
     <h1>Upload Error!</h1>
-    <p>Your PDF has not been successfully uploaded.</p>
+    <p>Your PDF has not been successfully uploaded. The error was: {{ error }}</p>
+    <!-- Provide a link back to the upload form or home page for convenience -->
+    <p><a href="{% url 'upload_pdf' %}">Try uploading again</a></p>
 {% endblock content %}

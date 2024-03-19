@@ -3,14 +3,24 @@
 
 {% block content %}
     <div class="container mt-4">
-        <h2>Summarize
-             PDFs</h2>
+        <h2>Summarize PDFs</h2>
         <p>Ask questions and get insights from your uploaded PDFs.</p>
         <form method="post" class="form-group">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">Send Message</button>
+            <label for="id_document_id">Document ID:</label>
+            <input type="text" name="document_id" class="form-control" id="id_document_id" placeholder="Insert docId here">
+            <small class="form-text text-muted">Enter the docId assigned by the API upon PDF upload.</small>
+            
+            <!-- Replace your textarea for summary with this -->
+            <label for="id_summary">Summary:</label>
+            {% if summary_result %}
+                <textarea name="summary" class="form-control" id="id_summary">{{ summary_result }}</textarea>
+            {% else %}
+                <textarea name="summary" class="form-control" id="id_summary" placeholder="Summary will be displayed here." disabled></textarea>
+            {% endif %}
+            <small class="form-text text-muted">Summary results will appear here after submission.</small>
+            
+            <button type="submit" class="btn btn-primary mt-3">Get Summary</button>
         </form>
     </div>
 {% endblock %}
-
