@@ -19,7 +19,7 @@ from .forms import (
 )
 
 # Set up logging (you can configure it more appropriately for your project)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('research_support')
 
 
 # def handle_upload_response(request, upload_type, response):
@@ -211,22 +211,19 @@ def upload_pdf_to_ai_pdf_api(data, upload_type):
             # Handle the response from the API
 
 # Assuming this snippet is part of the function that handles the upload and receives the response
-
-            if response and response.status_code == 200:
-                response_data = response.json()
-                logger.debug(f"API Response: {response_data}")  # Detailed logging of the response
-
-                doc_id = response_data.get('docId')
-                if doc_id:
-                    logger.info(f"Document uploaded successfully. Document ID: {doc_id}")
-                    # Assuming the function returns here, indicating success
-                    return response_data
-                else:
-                    logger.error("docId not found in the API response.")
-                    # Handle the absence of docId appropriately
+        if response.status_code == 200:
+            response_data = response.json()
+            summary_content = response_data.get('content', None)
+            if summary_content:
+                # If there's a summary, pass it to the template
+                return render(requests, 'research_support/summary_response.html', {'summary_content': summary_content})
             else:
-                logger.error(f"Upload failed. Status code: {response.status_code}, Response: {response.text}")
-                # Handle failure scenario appropriately
+                # If the 'content' key is missing, handle the error
+                return render(requests, 'research_support/summarize_pdf.html', {'form': form, 'error': 'Summary content not found.'})
+        else:
+            # Handle other API call errors
+            return render(requests, 'research_support/summarize_pdf.html', {'form': form, 'error': 'Failed to retrieve summary.'})
+
 
             
 
@@ -389,41 +386,47 @@ def send_chat_all_request(message):
     else:
         return {'error': 'Unable to process the request'}
 
+# Set up logging
+logger = logging.getLogger(__name__)
+
 def summarize_pdf(request):
     form = SummaryForm(request.POST or None)
-    summary_result = None
-    error_message = None
 
     if request.method == 'POST' and form.is_valid():
         api_key = os.environ.get('PDF_AI_API_KEY')
         if not api_key:
-            error_message = "API key not found. Please set the PDF_AI_API_KEY environment variable."
+            error_message = "API key not found."
+            return render(request, 'research_support/summarize_pdf.html', {'form': form, 'error': error_message})
+        
+        doc_id = form.cleaned_data.get('document_id')
+        language = form.cleaned_data.get('language', None)
+
+        url = "https://pdf.ai/api/v1/summary"
+        headers = {"X-API-Key": api_key}
+        payload = {"docId": doc_id, "language": language}
+        response = request.POST(url, json=payload, headers=headers)
+        logger.debug(f"API response: {response.json()} Status Code: {response.status_code}")
+
+        if response.status_code == 200:
+            summary_content = response.json().get('content')
+            return render(request, 'research_support/summarize_pdf.html', {'form': form, 'summary_content': summary_content})
         else:
-            doc_id = form.cleaned_data.get('document_id')
-            language = form.cleaned_data.get('language', None)  # Assuming you add a 'language' field to your form
+            error_message = f"Failed to summarize, status: {response.status_code}"
+            return render(request, 'research_support/summarize_pdf.html', {'form': form, 'error': error_message})
+            
+    return render(request, 'research_support/summarize_pdf.html', {'form': form})
 
-            # Make the API request to summarize the PDF
-            url = "https://pdf.ai/api/v1/summary"
-            headers = {"X-API-Key": api_key}
-            payload = {"docId": doc_id, "language": language}
-            response = requests.post(url, json=payload, headers=headers)
-
-            if response.status_code == 200:
-                response_data = response.json()
-                summary_result = response.json().get('content')
-
-                # Log the entire API response for debugging
-                logger.debug(f"API response: {response_data}")
-    
-                # Here you can also save the summary to your database if needed
-                # logger.debug(f"API response: {response.json()} Status Code: {response.status_code}")
-
-            else:
-                error_message = f"Failed to summarize document, status code: {response.status_code}"
-                # Log detailed error information
-                logger.error(f"API response error. Status Code: {response.status_code}, Response: {response.text}")
-
-    return render(request, 'research_support/summarize_pdf.html', {'form': form, 'summary_result': summary_result, 'error': error_message})
+def handle_summary_response(response, request):
+    if "error" in response:
+        logger.error(f"Summary retrieval failed with error: {response['error']}")
+        return render(request, 'research_support/summarize_pdf.html', {'error': response['error']})
+    elif "content" in response:
+        summary_content = response.get('content')
+        # Update to pass the form as well to preserve the original form input
+        return render(request, 'research_support/summary_response.html', {'summary_content': summary_content})
+    else:
+        logger.error("Unexpected response format received from summary function")
+        return render(request, 'research_support/summarize_pdf.html', {'error': 'Unexpected error occurred. Please try again.'})
       
 
 
@@ -505,20 +508,3 @@ def handle_upload_response(response, request):
         logger.error("Unexpected response format received from upload function")
         return render(request, 'research_support/upload_error.html', {'error': 'Unexpected error occurred. Please try again.'})
     
-def handle_summary_response(response, request):
-    # Assuming the response is a dictionary that may contain 'error' or the summary content
-    if "error" in response:
-        # Log the error and render an error message on the summary page
-        logger.error(f"Summary retrieval failed with error: {response['error']}")
-        return render(request, 'research_support/summarize_pdf.html', {'error': response['error']})
-    
-    elif "content" in response:
-        # Extract the summary content from the response
-        summary_content = response.get('content')
-        # Render a template showing the summary content
-        return render(request, 'research_support/summary_response.html', {'summary_content': summary_content})
-    
-    else:
-        # Handle unexpected response format
-        logger.error("Unexpected response format received from summary function")
-        return render(request, 'research_support/summarize_pdf.html', {'error': 'Unexpected error occurred. Please try again.'})

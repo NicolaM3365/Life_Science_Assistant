@@ -12,14 +12,15 @@
             <small class="form-text text-muted">Enter the docId assigned by the API upon PDF upload.</small>
             
             <!-- Replace your textarea for summary with this -->
+            <!-- Existing code -->
             <label for="id_summary">Summary:</label>
-            {% if summary_result %}
-                <textarea name="summary" class="form-control" id="id_summary">{{ summary_result }}</textarea>
+            {% if summary_content %}
+                <textarea name="summary" class="form-control" id="id_summary">{{ summary_content }}</textarea>
             {% else %}
                 <textarea name="summary" class="form-control" id="id_summary" placeholder="Summary will be displayed here." disabled></textarea>
             {% endif %}
             <small class="form-text text-muted">Summary results will appear here after submission.</small>
-            
+
             <button type="submit" class="btn btn-primary mt-3">Get Summary</button>
         </form>
     </div>
