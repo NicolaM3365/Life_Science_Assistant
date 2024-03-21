@@ -9,6 +9,6 @@
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-success">Confirm Update</button>
-        <a href="{% url 'pdf_detail' pdf.file_name %}" class="btn btn-secondary">Cancel</a>
+        <a href="{% url 'research_support:pdf_detail' pdf.file_name %}" class="btn btn-secondary">Cancel</a>
     </form>
 {% endblock %}

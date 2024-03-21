@@ -38,8 +38,8 @@ urlpatterns = [
 
     path('upload-pdf/success/', views.success_page, name='upload_pdf_success'),
     
-    path('summarize-pdf/', views.summarize_pdf, name='summarize_pdf'),
-    path('summarize-pdf/success/', views.success_page, name='summarize_pdf_success'),
+    # path('summarize-pdf/', views.summarize_pdf, name='summarize_pdf'),
+    # path('summarize-pdf/success/', views.success_page, name='summarize_pdf_success'),
     
 
     path('search/', views.search, name='search'),

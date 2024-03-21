@@ -19,7 +19,7 @@ from .forms import (
 )
 
 # Set up logging (you can configure it more appropriately for your project)
-logger = logging.getLogger('research_support')
+logger = logging.getLogger("research_support.views")
 
 
 # def handle_upload_response(request, upload_type, response):
@@ -214,6 +214,7 @@ def upload_pdf_to_ai_pdf_api(data, upload_type):
         if response.status_code == 200:
             response_data = response.json()
             summary_content = response_data.get('content', None)
+            form = SummaryForm()
             if summary_content:
                 # If there's a summary, pass it to the template
                 return render(requests, 'research_support/summary_response.html', {'summary_content': summary_content})
@@ -224,8 +225,6 @@ def upload_pdf_to_ai_pdf_api(data, upload_type):
             # Handle other API call errors
             return render(requests, 'research_support/summarize_pdf.html', {'form': form, 'error': 'Failed to retrieve summary.'})
 
-
-            
 
     except requests.exceptions.RequestException as e:
         # Log request errors
@@ -328,7 +327,7 @@ def get_pdf_from_ai_pdf_api(api_key, doc_id):
         return {"error": f"Failed to get document {doc_id}, status code: {response.status_code}"}
 
 def chat_with_pdf(request):
-    doc_id = request.session.get('id')
+    doc_id = request.session.get('docId')
     if request.method == 'POST':
         form = ChatForm(request.POST)
         if form.is_valid():
@@ -347,7 +346,7 @@ def send_chat_request(message, doc_id):
         raise ValueError("No API key set for PDF Ai PDF")       
 
     payload = {
-        'id': doc_id, # Replace with the actual document ID
+        'docId': doc_id, # Replace with the actual document ID
         'message': message,
         'save_chat': True, # or False, based on your requirement
         # Add other parameters as needed
@@ -386,78 +385,82 @@ def send_chat_all_request(message):
     else:
         return {'error': 'Unable to process the request'}
 
-# Set up logging
-logger = logging.getLogger(__name__)
-
 def summarize_pdf(request):
     form = SummaryForm(request.POST or None)
+    summary_content = None
+    error_message = None
 
     if request.method == 'POST' and form.is_valid():
         api_key = os.environ.get('PDF_AI_API_KEY')
         if not api_key:
-            error_message = "API key not found."
-            return render(request, 'research_support/summarize_pdf.html', {'form': form, 'error': error_message})
-        
-        doc_id = form.cleaned_data.get('document_id')
-        language = form.cleaned_data.get('language', None)
-
-        url = "https://pdf.ai/api/v1/summary"
-        headers = {"X-API-Key": api_key}
-        payload = {"docId": doc_id, "language": language}
-        response = request.POST(url, json=payload, headers=headers)
-        logger.debug(f"API response: {response.json()} Status Code: {response.status_code}")
-
-        if response.status_code == 200:
-            summary_content = response.json().get('content')
-            return render(request, 'research_support/summarize_pdf.html', {'form': form, 'summary_content': summary_content})
+            error_message = "API key not found. Please set the PDF_AI_API_KEY environment variable."
         else:
-            error_message = f"Failed to summarize, status: {response.status_code}"
-            return render(request, 'research_support/summarize_pdf.html', {'form': form, 'error': error_message})
-            
-    return render(request, 'research_support/summarize_pdf.html', {'form': form})
+            doc_id = form.cleaned_data.get('document_id')
+            language = form.cleaned_data.get('language', None)  # Assuming you add a 'language' field to your form
 
-def handle_summary_response(response, request):
-    if "error" in response:
-        logger.error(f"Summary retrieval failed with error: {response['error']}")
-        return render(request, 'research_support/summarize_pdf.html', {'error': response['error']})
-    elif "content" in response:
-        summary_content = response.get('content')
-        # Update to pass the form as well to preserve the original form input
-        return render(request, 'research_support/summary_response.html', {'summary_content': summary_content})
-    else:
-        logger.error("Unexpected response format received from summary function")
-        return render(request, 'research_support/summarize_pdf.html', {'error': 'Unexpected error occurred. Please try again.'})
+            # Make the API request to summarize the PDF
+            url = "https://pdf.ai/api/v1/summary/"
+            headers = {"X-API-Key": api_key}
+            payload = {"docId": doc_id, "language": language}
+            response = requests.post(url, json=payload, headers=headers)
+
+            if response.status_code == 200:
+                summary_content = response.json().get('content')
+                # Update the form's summary field with the API response
+                form.fields['summary'].disabled = False  # Temporarily enable the field to accept new data
+                form.initial['summary'] = summary_content  # Set the initial value to the API response
+                form.fields['summary'].disabled = True  # Disable the field again if it's for display only
+                
+
+                # Log the entire API response for debugging
+                logger.debug(f"API response: {summary_content}")
+    
+                # Here you can also save the summary to your database if needed
+                # logger.debug(f"API response: {response.json()} Status Code: {response.status_code}")
+
+            else:
+                error_message = f"Failed to summarize document, status code: {response.status_code}"
+                # Log detailed error information
+                logger.error(f"API response error. Status Code: {response.status_code}, Response: {response.text}")
+
+    return render(request, 'research_support/summarize_pdf.html', {'form': form, 'summary_content': summary_content, 'error': error_message})
       
-
-
 def delete_pdf(request, doc_id):
-    api_key = 'Your_MyAIDrive_API_Key'  # Ideally, fetch this from a secure place like environment variables
-    result = delete_pdf_from_ai_pdf_api(api_key, doc_id)
+    api_key = os.environ.get('PDF_AI_API_KEY')
+    if not api_key:
+        # Provide a user-friendly error message if the API key is missing
+        return HttpResponse("API key for PDF.AI is not configured properly in the environment variables.", status=500)
 
-    if "message" in result:
-        # If the API returned a success message, redirect to a success page or the list of PDFs
-        messages.success(request, result["message"])
-        return redirect('research_support:get_all_pdfs')  # Replace 'pdfs_list_url' with the name of your URL to list PDFs
+    if request.method == 'POST':
+        result = delete_pdf_from_ai_pdf_api(api_key, doc_id)
+        if "error" in result:
+            messages.error(request, result["error"])
+        else:
+            messages.success(request, result.get("message", "PDF deleted successfully."))
+        return redirect('research_support:get_all_pdfs')
     else:
-        # If there was an error, display the error message to the user
-        error_message = result.get("error", "An unknown error occurred.")
-        messages.error(request, error_message)
-        return redirect('research_support:get_all_pdfs')  # You might redirect back to where the user was, or to an error page
+        # Since get_pdf is designed to fetch and render PDF details, we can't directly use it here
+        # as it returns a response object. Instead, replicate its API call logic to fetch PDF details
+        pdf_detail = get_pdf_from_ai_pdf_api(api_key, doc_id)  # Replicate the internal logic of get_pdf
+        if 'error' in pdf_detail:
+            return render(request, 'research_support/get_pdf_error.html', {'error': pdf_detail['error']})
+        # Render a confirmation page with PDF details
+        return render(request, 'research_support/delete_pdf.html', {'pdf': pdf_detail, 'doc_id': doc_id})
 
 
 
 
 def delete_pdf_from_ai_pdf_api(api_key, doc_id):
-    url = f"https://pdf.ai/api/v1/documents/{doc_id}"
-    headers = {
-        "X-API-KEY":api_key
-    }
-    response = requests.delete(url, headers=headers)
+    url = "https://pdf.ai/api/v1/delete"
+    headers = {"X-API-Key": api_key}
+    payload = {"docId": doc_id}
+    response = requests.post(url, json=payload, headers=headers)
     if response.status_code == 200:
-        return response.json() ['data']
+        # If the API response indicates success
+        return {"message": "Successfully deleted!"}
     else:
-        return {"error": f"Failed to delete document, status code: {response.status_code}"}
-
+        # Return any errors encountered
+        return {"error": f"Failed to delete document, status code: {response.status_code}, response: {response.text}"}
 
 
 # def upload_pdf_and_get_doc_id(request):
@@ -508,3 +511,20 @@ def handle_upload_response(response, request):
         logger.error("Unexpected response format received from upload function")
         return render(request, 'research_support/upload_error.html', {'error': 'Unexpected error occurred. Please try again.'})
     
+def handle_summary_response(response, request):
+    # Assuming the response is a dictionary that may contain 'error' or the summary content
+    if "error" in response:
+        # Log the error and render an error message on the summary page
+        logger.error(f"Summary retrieval failed with error: {response['error']}")
+        return render(request, 'research_support/summarize_pdf.html', {'error': response['error']})
+    
+    elif "content" in response:
+        # Extract the summary content from the response
+        summary_content = response.get('content')
+        # Render a template showing the summary content
+        return render(request, 'research_support/summary_response.html', {'summary_content': summary_content})
+    
+    else:
+        # Handle unexpected response format
+        logger.error("Unexpected response format received from summary function")
+        return render(request, 'research_support/summarize_pdf.html', {'error': 'Unexpected error occurred. Please try again.'})
