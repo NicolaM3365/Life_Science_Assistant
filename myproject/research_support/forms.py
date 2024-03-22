@@ -97,15 +97,6 @@ class UploadPDFForm(forms.Form):
 
 
 
-
-
-
-
-
-
-
-
-
 class PDFAnalysisForm(forms.Form):
     ANALYSIS_CHOICES = [
         ('text_extraction', 'Text Extraction'),
@@ -122,14 +113,20 @@ class PDFAnalysisForm(forms.Form):
 
 # forms.py
 
-
 class ChatForm(forms.Form):
-    message = forms.CharField(
-        label='Your Message',
-        max_length=1000,  # Adjust the max_length as needed
-        widget=forms.Textarea(attrs={'placeholder': 'Type your message here...'}),
-        required=True
+    docId = forms.CharField(
+        label='Document ID',
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'Paste the Document ID here...'})  # Use TextInput for a one-line input box
     )
+    message = forms.CharField(
+        label='Message',
+        required=True, 
+        widget=forms.Textarea(attrs={'placeholder': 'Enter your message or question...'})  # Use TextInput for a one-line input box
+
+    )
+
 
     save_chat = forms.BooleanField(
         label='Save Chat History',
