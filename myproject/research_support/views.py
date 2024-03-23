@@ -8,6 +8,8 @@ from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from django.db.models import Q
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 import logging
 
 
@@ -15,7 +17,7 @@ from .models import PDF, Document, Image, Summary, Tag, Related, Vector, QA, Fee
 from .forms import (
     DocumentForm, ImageForm, SummaryForm, TagForm, RelatedForm, VectorForm,
     QAForm, FeedbackForm, QueryForm, SearchForm, UploadForm, PDFForm,
-    ChatForm, PDFAnalysisForm, UploadPDFUrlForm, UploadPDFForm
+    ChatForm, PDFAnalysisForm, UploadPDFUrlForm, UploadPDFForm, DeletePDFForm
 )
 
 # Set up logging (you can configure it more appropriately for your project)
@@ -155,6 +157,7 @@ def upload_error(request):
     error_message = request.GET.get('error', 'An unknown error occurred.')
     return render(request, 'research_support/upload_error.html', {'error': error_message})
 
+@login_required
 def upload_pdf(request):
     url_form = UploadPDFUrlForm()
     file_form = UploadPDFForm() 
@@ -239,16 +242,21 @@ def get_all_pdfs(request):
     api_key = os.environ.get('PDF_AI_API_KEY')
     if not api_key:
         return HttpResponse("API key for PDF.AI is not configured properly in the environment variables.", status=500)
-        # raise ValueError("No API key set for PDF Ai PDF")   
-    pdfs = get_all_pdfs_from_ai_pdf_api(api_key)
     
-    # Check if the response from the helper function contains an error
+    pdfs = get_all_pdfs_from_ai_pdf_api(api_key)  # Assuming this fetches data
+    
     if 'error' in pdfs:
         # Pass the error message to the template for user-friendly feedback
         return render(request, 'research_support/get_all_pdfs_error.html', {'error': pdfs['error']})
-    else:
-        # Render the PDFs using the template
-        return render(request, 'research_support/get_all_pdfs.html', {'pdfs': pdfs})
+    
+    # Pagination setup starts here
+    items_per_page = request.GET.get('items_per_page', 10)  # Get items per page from request or use default
+    paginator = Paginator(pdfs, int(items_per_page))  # Ensure items_per_page is an integer
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Render the PDFs using the pagination object
+    return render(request, 'research_support/get_all_pdfs.html', {'page_obj': page_obj})
 
 def get_all_pdfs_from_ai_pdf_api(api_key):
     url = "https://pdf.ai/api/v1/documents"
@@ -313,7 +321,7 @@ def chat_with_pdf(request):
         if form.is_valid():
             docId = form.cleaned_data['docId']
             message = form.cleaned_data['message']
-            response = send_chat_request(message,docId)
+            response = send_chat_request(message, docId)
             if 'error' not in response:  # Check for no error in response
                 return render(request, 'research_support/chat_response.html', {'response': response})
             else:
@@ -371,73 +379,99 @@ def send_chat_all_request(message):
     else:
         return {'error': 'Unable to process the request'}
 
-def summarize_pdf(request):
-    form = SummaryForm(request.POST or None)
-    summary_content = None
-    error_message = None
 
-    if request.method == 'POST' and form.is_valid():
-        api_key = os.environ.get('PDF_AI_API_KEY')
-        if not api_key:
-            error_message = "API key not found. Please set the PDF_AI_API_KEY environment variable."
-        else:
-            doc_id = form.cleaned_data.get('document_id')
-            language = form.cleaned_data.get('language', None)  # Assuming you add a 'language' field to your form
+def send_summary_request(doc_id):
+    api_url = "https://pdf.ai/api/v1/summary/"
+    api_key = os.environ.get('PDF_AI_API_KEY')
+    if not api_key:
+        raise ValueError("No API key set for PDF Ai PDF")
 
-            # Make the API request to summarize the PDF
-            url = "https://pdf.ai/api/v1/summary/"
-            headers = {"X-API-Key": api_key}
-            payload = {"docId": doc_id, "language": language}
-            response = requests.post(url, json=payload, headers=headers)
-
-            if response.status_code == 200:
-                summary_content = response.json().get('content')
-                # Update the form's summary field with the API response
-                form.fields['summary'].disabled = False  # Temporarily enable the field to accept new data
-                form.initial['summary'] = summary_content  # Set the initial value to the API response
-                form.fields['summary'].disabled = True  # Disable the field again if it's for display only
-                
-
-                # Log the entire API response for debugging
-                logger.debug(f"API response: {summary_content}")
-    
-                # Here you can also save the summary to your database if needed
-                # logger.debug(f"API response: {response.json()} Status Code: {response.status_code}")
-
-            else:
-                error_message = f"Failed to summarize document, status code: {response.status_code}"
-                # Log detailed error information
-                logger.error(f"API response error. Status Code: {response.status_code}, Response: {response.text}")
-
-    return render(request, 'research_support/summarize_pdf.html', {'form': form, 'summary_content': summary_content, 'error': error_message})
-      
-
-
-def delete_pdf(request, doc_id):
-    api_key = os.environ.get('PDF_AI_API_KEY')  # Ideally, fetch this from a secure place like environment variables
-    result = delete_pdf_from_ai_pdf_api(api_key, doc_id)
-
-    if "message" in result:
-        # If the API returned a success message, redirect to a success page or the list of PDFs
-        messages.success(request, result["message"])
-        return redirect('research_support:get_all_pdfs')  # Replace 'pdfs_list_url' with the name of your URL to list PDFs
-    else:
-        # If there was an error, display the error message to the user
-        error_message = result.get("error", "An unknown error occurred.")
-        messages.error(request, error_message)
-        return redirect('research_support:get_all_pdfs')  # You might redirect back to where the user was, or to an error page
-
-
-
-
-def delete_pdf_from_ai_pdf_api(api_key, doc_id):
-    url = f"https://pdf.ai/api/v1/documents/{doc_id}"
-    headers = {
-        "X-API-KEY":api_key
+    payload = {
+        'docId': doc_id,
+        # Remove the 'language' payload if not needed or handle dynamically as required
     }
-    response = requests.delete(url, headers=headers)
+    headers = {'X-API-Key': api_key}
+    response = requests.post(api_url, json=payload, headers=headers)
+    
     if response.status_code == 200:
-        return response.json() ['message']
+        return response.json()
+    # # else:
+    # #     logger.error(f"Failed to summarize document. Status code: {response.status_code}, Error: {response.text}")
+    # #     return {'error': f'Failed to summarize document. Status code: {response.status_code}'}
+
+    # if response.status_code == 200:
+    #     return response.json()
+    elif response.status_code == 401:
+        return {'error': 'Invalid API key'}
+    elif response.status_code == 400:
+        return {'error': 'Bad request - missing API key, id, or message'}
+    else:
+        return {'error': f'Failed to summarize document. Status code: {response.status_code}'}
+
+
+
+
+def summarize_pdf(request):
+    # form = SummaryForm(request.POST or None)
+    # summary_result = None
+    # error_message = None
+
+    if request.method == 'POST':
+        form = SummaryForm(request.POST or None)
+        if form.is_valid():
+            docId = form.cleaned_data['docId']
+            response = send_summary_request(docId)
+        
+        if 'error' not in response:
+                return render(request, 'research_support/summary_response.html', {'response': response})
+
+            # summary_result = response.get('content', 'No summary available.')
+            # # Instead of dynamically disabling/enabling form fields, consider displaying the summary separately
+        else:
+            return render(request, 'research_support/summarize_pdf.html', {'form': form, 'error': response['error']})
+
+    else:
+        form = SummaryForm()
+
+    return render(request, 'research_support/summarize_pdf.html', {'form': form})
+
+@login_required
+def delete_pdf(request, doc_id):
+    if request.method == 'POST':
+        # Attempt to delete the document from the AI Drive first
+        response = delete_pdf_from_ai_pdf_api(doc_id)
+        if 'error' in response:
+            # If there's an error, inform the user
+            messages.error(request, response['error'])
+        else:
+            # If the API call was successful, delete the document from the Django database
+            # pdf = get_object_or_404(PDF, id=doc_id)  # Make sure to use the correct model and field name
+            # pdf.delete()
+            # Inform the user of success
+            messages.success(request, 'PDF deleted successfully.')
+            
+        # Redirect to the page showing all PDFs
+        return redirect('research_support:get_all_pdfs')
+    else:
+        # If not a POST request, do not allow deletion
+        return redirect('research_support:get_all_pdfs')
+
+
+
+def delete_pdf_from_ai_pdf_api(doc_id):
+    api_url = "https://pdf.ai/api/v1/delete"
+    api_key = os.environ.get('PDF_AI_API_KEY')
+    if not api_key:
+        raise ValueError("No API key set for PDF Ai PDF")
+
+    payload = {'docId': doc_id}
+
+    headers = {
+        "X-API-KEY": api_key
+    }
+    response = requests.post(api_url, json=payload, headers=headers)
+    if response.status_code == 200:
+        return {"message": response.json().get("message", "Successfully deleted!")}
     else:
         return {"error": f"Failed to delete document, status code: {response.status_code}"}
 

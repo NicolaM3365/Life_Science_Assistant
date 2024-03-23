@@ -16,6 +16,7 @@ class PDF(models.Model):
     tags = models.ManyToManyField('Tag', blank=True)
     category = models.CharField(max_length=100, blank=True, null=True)
     author = models.CharField(max_length=255, blank=True, null=True)  # Adjusted field
+    title = models.CharField(max_length=255, blank=True, null=True)  # Adjusted field
     source = models.URLField(blank=True, null=True)
     # Placeholder for fields requiring additional models or special handling
     images = models.ManyToManyField('Image', blank=True)

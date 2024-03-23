@@ -1,27 +1,46 @@
+{% extends "research_support/base.html" %}
 
-    {% extends "research_support/base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-3">Research Support with AI PDF GPT</h1>
+    
+    <p class="mb-3">AI PDF GPT brings a set of advanced capabilities specifically tailored for handling PDF documents. From managing and summarizing to searching within PDF files, it offers unique advantages over the general functionalities of ChatGPT. Here's how you can leverage AI PDF GPT for your research needs:</p>
+    
+    <h2 class="mb-3">Uploading Your PDF</h2>
+    <ol class="mb-4">
+        <li>Look for an "Upload" button on myaidrive.com, which may also be represented by an icon like an upward arrow or cloud symbol.</li>
+        <li>Click "Upload" to open the file selection dialog, then choose your PDF file and confirm the upload.</li>
+        <li>Wait for the upload process to complete. The duration depends on your file size and internet speed.</li>
+        <li>Once uploaded, your file will be available in your myaidrive.com account for sharing or accessing anytime, anywhere.</li>
+    </ol>
 
-    {% block content %}
+    <p class="mb-3">Remember, myaidrive.com supports nearly unlimited uploads with individual files up to 2 GB. For extra features like automatic OCR and data extraction, consider a Pro account upgrade.</p>
 
-    <h1 class="mt-4">Research Support</h1>
-    <p> Look for an "Upload" button or link, which might be represented by an icon (such as an upward arrow or cloud symbol).
-      Click on the "Upload" button. A file selection dialog will appear, allowing you to choose the file(s) you want to upload from your computer.
-      Select the PDF file you wish to upload and click "Open" or "OK" in the file selection dialog. Your file will start uploading.
-      Wait for the upload to complete. The time it takes will depend on the size of the file and your internet connection speed.
-      After the upload is complete, your file will be visible in your myaidrive.com account. You can now share the link to the file with others or access it from anywhere when needed.
-      Remember, myaidrive.com allows for practically unlimited document uploads, and files can be up to 2 GB each, making it a very convenient option for storing and sharing large PDF files. For additional features like automatic OCR of files and data extraction, consider upgrading to a Pro account.</p>
+    <h2 class="mb-3">Key Features of AI PDF GPT</h2>
+    <p class="mb-4">AI PDF GPT is adept at conducting parallel searches within PDF documents to align search contexts precisely with your document's subject. By analyzing the PDF content for key topics and questions, it ensures search results are highly relevant and informative.</p>
 
-    {% for post in posts %}
-        <article class="media content-section">
-          <img class="rounded-circle article-img" src="{{ post.author.profile.image.url }}">
+    <p>If you have a specific PDF and question in mind, sharing the PDF link and your inquiry allows for optimized search accuracy and relevance, courtesy of AI PDF GPT's specialized capabilities.</p>
+
+    <!-- Button to navigate to the About page -->
+    <div class="mt-4">
+        <a href="{% url 'research_support:about' %}" class="btn btn-primary">Learn More</a>
+    </div>
+
+    <section class="mt-5">
+        <h2 class="mb-3">Latest Posts</h2>
+        {% for post in posts %}
+        <article class="d-flex align-items-center content-section mb-4">
+            <img class="rounded-circle article-img mr-3" src="{{ post.author.profile.image.url }}" alt="{{ post.author }}">
             <div class="media-body">
-              <div class="article-metadata">
-                <a class="mr-2" href="#">{{ post.author }}</a>
-                <small class="text-muted">{{ post.date_posted|date:'dS, F, Y'}}</small>
-              </div>
-              <h2><a class="article-title" href="{% url 'post-detail' post.id %}">{{ post.title }}</a></h2>
-              <p class="article-content">{{ post.content }}</p>
+                <div class="article-metadata">
+                    <a class="mr-2" href="#">{{ post.author }}</a>
+                    <small class="text-muted">{{ post.date_posted|date:"dS, F, Y" }}</small>
+                </div>
+                <h2><a class="article-title" href="{% url 'post_detail' post.id %}">{{ post.title }}</a></h2>
+                <p class="article-content">{{ post.content }}</p>
             </div>
-          </article>
-    {% endfor %}
+        </article>
+        {% endfor %}
+    </section>
+</div>
 {% endblock content %}

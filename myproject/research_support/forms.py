@@ -13,21 +13,6 @@ class ImageForm(forms.ModelForm):
         fields = ['document_id', 'file_path']  # List all the fields you want from the model
 
 
-
-class SummaryForm(forms.ModelForm):
-    class Meta:
-        model = Summary
-        fields = ['document_id', 'summary']  # Assuming these are the fields you need
-
-    def __init__(self, *args, **kwargs):
-        super(SummaryForm, self).__init__(*args, **kwargs)
-        self.fields['document_id'].widget.attrs.update({'placeholder': 'Insert docId here'})
-        self.fields['document_id'].help_text = 'Enter the docId assigned by the API upon PDF upload.'
-        # Assuming summary field is for displaying summary and not for user input:
-        self.fields['summary'].widget.attrs.update({'placeholder': 'This will display your summary'})
-        self.fields['summary'].disabled = True
-        self.fields['summary'].help_text = 'Summary results will appear here after submission.'
-
 class TagForm(forms.ModelForm):
     class Meta:
         model = Tag
@@ -112,6 +97,14 @@ class PDFAnalysisForm(forms.Form):
 # forms.py
 
 # forms.py
+    
+class DeletePDFForm(forms.Form):
+    docId = forms.CharField(
+        label='Document ID',
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'Paste the Document ID here...'})
+    )
 
 class ChatForm(forms.Form):
     docId = forms.CharField(
@@ -146,6 +139,27 @@ class ChatForm(forms.Form):
         required=False,
         initial=False
     )
+
+
+class SummaryForm(forms.Form):
+    docId = forms.CharField(
+        label='Document ID',
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={'placeholder': 'Paste the Document ID here...'}),
+        help_text='Paste the docId assigned by the API upon PDF upload here...'
+    )
+    # summary = forms.CharField(
+    #     label='Summary',
+    #     required=False,  # Set to False because the summary is provided by the API and not the user
+    #     widget=forms.Textarea(attrs={'placeholder': 'This will display your summary', 'disabled': True, 'rows': 4, 'cols': 15}),
+    #     help_text='Summary results will appear here after submission.'
+    # )
+
+
+
+
+
 
 
 

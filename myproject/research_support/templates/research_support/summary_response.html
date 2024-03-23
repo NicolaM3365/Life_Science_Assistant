@@ -3,24 +3,28 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Summary Content</h2>
-    
-    <!-- Display the summary result from the API -->
-    {% if summary_result %}
+    <h2>Summary Response</h2>
+
+    {% if response.content %}
         <div class="response-section">
-            <h4>Summary:</h4>
-            <p>{{ summary_content }}</p>  <!-- Display the summary content -->
+            <h4>Response:</h4>
+            <p>{{ response.content }}</p>
+            <!-- {% if response.references %}
+                <h5>References:</h5>
+                <ul>
+                    {% for reference in response.references %}
+                        <li>Page: {{ reference.pageNumber }}, Lines: {{ reference.fromLine }} to {{ reference.toLine }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %} -->
         </div>
-    {% endif %}
-    
-    <!-- Display any error messages -->
-    {% if error %}
-        <div class="alert alert-danger" role="alert">
-            {{ error }}
-        </div>
+    {% else %}
+        <p>No response received or there was an error.</p>
     {% endif %}
 
-    <!-- Link to go back to the form for another summary request -->
-    <a href="{% url 'research_support:summarize_pdf' %}" class="btn btn-primary mt-3">Get Another Summary</a>
+    <!-- Link to go back to the chat form -->
+    <a href="{% url 'research_support:summarize_pdf' %}" class="btn btn-primary">Ask Another Question</a>
 </div>
 {% endblock %}
+
+

@@ -95,3 +95,23 @@ body {
         margin-bottom: 10px;
       }
     }
+    
+    
+    /* Include this in your main.css or equivalent stylesheet */
+@media (max-width: 768px) { /* Adjust this value based on when you want the stacking to occur */
+  .btn-group {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    align-items: stretch; /* Stretch buttons to full width */
+  }
+
+  .btn-group .btn {
+    margin-bottom: 0.5rem; /* Add some space between the buttons */
+  }
+
+  .btn-group .btn:last-child {
+    margin-bottom: 0; /* Remove margin-bottom from the last button */
+  }
+}
+
+    

@@ -3,12 +3,12 @@
 
 {% block content %}
     <div class="container mt-4">
-        <h2>Summarize PDFs</h2>
-        <p>Ask questions and get insights from your uploaded PDFs.</p>
+        <h2>Summarize PDF</h2>
+        <p>Ask questions and get insights from your uploaded PDF.</p>
         <form method="post" class="form-group">
             {% csrf_token %}
             <label for="id_document_id">Document ID:</label>
-            <input type="text" name="document_id" class="form-control" id="id_document_id" placeholder="Insert docId here">
+            <input type="text" name="document_id" class="form-control" id="id_document_id" placeholder="Enter the docId assigned by the API upon PDF upload.">
             <small class="form-text text-muted">Enter the docId assigned by the API upon PDF upload.</small>
             
             <!-- Replace your textarea for summary with this -->
