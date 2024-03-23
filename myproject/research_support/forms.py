@@ -146,17 +146,24 @@ class SummaryForm(forms.Form):
         label='Document ID',
         max_length=100,
         required=True,
-        widget=forms.TextInput(attrs={'placeholder': 'Paste the Document ID here...'}),
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Paste the Document ID here...',
+            'class': 'form-control',  # Bootstrap class for styling
+        }),
         help_text='Paste the docId assigned by the API upon PDF upload here...'
     )
-    # summary = forms.CharField(
-    #     label='Summary',
-    #     required=False,  # Set to False because the summary is provided by the API and not the user
-    #     widget=forms.Textarea(attrs={'placeholder': 'This will display your summary', 'disabled': True, 'rows': 4, 'cols': 15}),
-    #     help_text='Summary results will appear here after submission.'
-    # )
-
-
+    summary = forms.CharField(
+        label='Summary',
+        required=False,  # Set to False because the summary is provided by the API and not the user
+        widget=forms.Textarea(attrs={
+            'placeholder': 'This will display your summary',
+            'class': 'form-control',  # Bootstrap class for styling
+            'disabled': True,
+            'rows': 4,
+            'cols': 15
+        }),
+        help_text='Summary results will appear here after submission.'
+    )
 
 
 

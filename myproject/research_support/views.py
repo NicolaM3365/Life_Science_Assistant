@@ -410,30 +410,30 @@ def send_summary_request(doc_id):
 
 
 
-
 def summarize_pdf(request):
-    # form = SummaryForm(request.POST or None)
-    # summary_result = None
-    # error_message = None
+    form = SummaryForm(request.POST or None)
+    summary_content = None  # Variable to hold the summary response
 
-    if request.method == 'POST':
-        form = SummaryForm(request.POST or None)
-        if form.is_valid():
-            docId = form.cleaned_data['docId']
-            response = send_summary_request(docId)
+    if request.method == 'POST' and form.is_valid():
+        doc_id = form.cleaned_data['docId']
+        response = send_summary_request(doc_id)
         
-        if 'error' not in response:
-                return render(request, 'research_support/summary_response.html', {'response': response})
-
-            # summary_result = response.get('content', 'No summary available.')
-            # # Instead of dynamically disabling/enabling form fields, consider displaying the summary separately
+        # Check if 'error' key exists in the response
+        if 'error' in response:
+            # Directly add the error to the form as a non-field error
+            form.add_error(None, response['error'])
         else:
-            return render(request, 'research_support/summarize_pdf.html', {'form': form, 'error': response['error']})
+            # If no error, capture the summary content from the response
+            summary_content = response.get('content', '')  # Adjust key as per your API response
 
-    else:
-        form = SummaryForm()
+    # Prepare context with form and summary_content regardless of POST or GET
+    context = {
+        'form': form,
+        'summary_content': summary_content
+    }
 
-    return render(request, 'research_support/summarize_pdf.html', {'form': form})
+    # Always render the same template, passing in the context
+    return render(request, 'research_support/summarize_pdf.html', context)
 
 @login_required
 def delete_pdf(request, doc_id):

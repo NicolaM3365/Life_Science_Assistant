@@ -7,21 +7,24 @@
         <p>Ask questions and get insights from your uploaded PDF.</p>
         <form method="post" class="form-group">
             {% csrf_token %}
-            <label for="id_document_id">Document ID:</label>
-            <input type="text" name="document_id" class="form-control" id="id_document_id" placeholder="Enter the docId assigned by the API upon PDF upload.">
-            <small class="form-text text-muted">Enter the docId assigned by the API upon PDF upload.</small>
+            <div class="mb-3">
+                {{ form.docId.label_tag }}
+                {{ form.docId }}
+                <small class="form-text text-muted">{{ form.docId.help_text }}</small>
+            </div>
             
-            <!-- Replace your textarea for summary with this -->
-            <!-- Existing code -->
-            <label for="id_summary">Summary:</label>
-            {% if summary_content %}
-                <textarea name="summary" class="form-control" id="id_summary">{{ summary_content }}</textarea>
-            {% else %}
-                <textarea name="summary" class="form-control" id="id_summary" placeholder="Summary will be displayed here." disabled></textarea>
-            {% endif %}
-            <small class="form-text text-muted">Summary results will appear here after submission.</small>
+            <div class="mb-3">
+                {{ form.summary.label_tag }}
+                {% if summary_content %}
+                    <!-- Update the widget's attributes dynamically to remove 'disabled' when summary_content is present -->
+                    <textarea name="summary" class="form-control" id="id_summary" rows="4" cols="15">{{ summary_content }}</textarea>
+                {% else %}
+                    {{ form.summary }}
+                {% endif %}
+                <small class="form-text text-muted">{{ form.summary.help_text }}</small>
+            </div>
 
-            <button type="submit" class="btn btn-primary mt-3">Get Summary</button>
+            <button type="submit" class="btn btn-primary">Get Summary</button>
         </form>
     </div>
 {% endblock %}
