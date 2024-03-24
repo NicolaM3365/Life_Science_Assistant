@@ -37,12 +37,14 @@ urlpatterns = [
 
     path('upload-pdf/success/', views.success_page, name='upload_pdf_success'),
     
+    path('parallel-search/', views.parallel_search, name='parallel_search'),
     
 
     path('search/', views.search, name='search'),
     path('upload-pdf-to-ai-pdf-api/', views.upload_pdf_to_ai_pdf_api, name='upload_pdf_to_ai_pdf_api'),
     path('success/', views.success_page, name='success_url'),
-    path('upload-error/', views.upload_error, name='upload_error')
+    path('upload-error/', views.upload_error, name='upload_error'),
+
 
 
 

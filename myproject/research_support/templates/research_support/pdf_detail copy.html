@@ -1,0 +1,45 @@
+{% extends "research_support/base.html" %}
+{% load static %}
+
+{% block content %}
+    <h2>PDF Detail: {{ pdf.id }}</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">File Name: {{ pdf.name }}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Uploaded on: {{ pdf.uploadedAt }}</h6>
+            <p class="card-text">Additional details about the PDF can go here.</p>     
+            <a href="{% url 'research_support:get_pdf' doc_id=pdf.id %}" class="card-link">Download PDF</a>
+        </div>
+    </div>
+
+
+    <!-- Display chat history section -->
+    {% if chat_histories %}
+        <div class="chat-history">
+            <h3>Chat History</h3>
+            <ul>
+                {% for chat in chat_histories %}
+                    <li>
+                        <strong>Question:</strong> {{ chat.message }}<br>
+                        <strong>Response:</strong> {{ chat.response|safe }}<br>
+                        <small>Sent on: {{ chat.created_at }}</small>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <!-- Additional functionalities like viewing images, summaries, tags, etc., associated with the PDF -->
+    {% if pdf.image %}
+        <h3>Image</h3>
+        <!-- Display images here -->
+    {% endif %}
+
+    {% if pdf.summary %}
+        <h3>Summary</h3>
+        <!-- Display summaries here -->
+    {% endif %}
+
+    <!-- More sections can be added as per the related models and functionalities -->
+
+{% endblock %}

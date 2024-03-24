@@ -29,12 +29,13 @@ logger = logging.getLogger("research_support.views")
 def format_content(response):
     try:
         response_data = json.loads(response)
-        formatted_content = format_html("<p>{}</p>", response_data['content'].replace('\n', '<br>'))
+        formatted_content = format_html("{}", response_data['content'].replace('\n', '<br>'))
         references = response_data.get('references', [])
         return formatted_content, references
     except json.JSONDecodeError:
         # If response is not JSON or can't be parsed, return it as is
-        return response, []
+        return format_html("{}", response), []
+
 
 
 
@@ -544,3 +545,8 @@ def handle_summary_response(response, request):
         # Handle unexpected response format
         logger.error("Unexpected response format received from summary function")
         return render(request, 'research_support/summarize_pdf.html', {'error': 'Unexpected error occurred. Please try again.'})
+
+
+def parallel_search(request):
+    # Your parallel search handling code here
+    return render(request, 'research_support/parallel_search.html', {})

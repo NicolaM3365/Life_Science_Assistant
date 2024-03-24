@@ -8,39 +8,73 @@
             <h5 class="card-title">File Name: {{ pdf.name }}</h5>
             <h6 class="card-subtitle mb-2 text-muted">Uploaded on: {{ pdf.uploadedAt }}</h6>
             <p class="card-text">Additional details about the PDF can go here.</p>     
-            <!-- <a href="{% url 'research_support:get_pdf' doc_id=pdf.id %}" class="card-link">Download PDF</a> -->
-            <a href="{{ pdf.url }}" target="_blank">View PDF</a>
+            <a href="{% url 'research_support:get_pdf' doc_id=pdf.id %}" class="card-link">Download PDF</a>
         </div>
     </div>
 
 
-    <!-- Display chat history section -->
-    {% if chat_histories %}
-        <div class="chat-history">
-            <h3>Chat History</h3>
-            <ul>
-                {% for chat in chat_histories %}
-                    <li>
+            <!-- Chat History -->
+            {% if chat_histories %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>Chat History</h3>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {% for chat in chat_histories %}
+                    <li class="list-group-item">
                         <strong>Question:</strong> {{ chat.message }}<br>
-                        <strong>Response:</strong> {{ chat.response|safe }}<br>
+                        <strong>Response:</strong> {{ chat.formatted_response|safe }}<br>
+                        {% if chat.references %}
+                            <strong>References:</strong>
+                            <ul>
+                                {% for reference in chat.references %}
+                                    <li>Page: {{ reference.pageNumber }}, Lines: {{ reference.fromLine }} to {{ reference.toLine }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
                         <small>Sent on: {{ chat.created_at }}</small>
                     </li>
-                {% endfor %}
-            </ul>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
         </div>
-    {% endif %}
 
-    <!-- Additional functionalities like viewing images, summaries, tags, etc., associated with the PDF -->
-    {% if pdf.image %}
-        <h3>Image</h3>
-        <!-- Display images here -->
-    {% endif %}
+        <!-- Additional functionalities -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3">Actions</h5>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                        <a href="{% url 'research_support:chat_with_pdf' %}?doc_id={{ docId }}" class="btn btn-primary mt-2">Chat with PDF</a>
+                        <a href="{% url 'research_support:summarize_pdf' %}?doc_id={{ docId }}" class="btn btn-secondary mt-2">Summarize PDF</a>
+                    </div>
+                    <h5 class="mb-3"></h5>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                        <a href="{% url 'research_support:upload_pdf' %}" class="btn btn-primary mb-2">Upload PDF</a>
+                        <a href="{% url 'research_support:get_all_pdfs' %}" class="btn btn-secondary mb-2">List PDFs</a>
+                    </div>
+                </div>
+            </div>
 
-    {% if pdf.summary %}
-        <h3>Summary</h3>
-        <!-- Display summaries here -->
-    {% endif %}
+            {% if pdf.image %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Image</h5>
+                    <!-- Display image here -->
+                </div>
+            </div>
+            {% endif %}
 
-    <!-- More sections can be added as per the related models and functionalities -->
-
+            {% if pdf.summary %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Summary</h5>
+                    <!-- Display summary here -->
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

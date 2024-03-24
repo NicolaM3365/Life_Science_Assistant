@@ -1,0 +1,23 @@
+{% extends "research_support/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Parallel Search coming soon...</h1>
+    <p>
+        "Given the context of the document detailing the latest Supreme Court decision on [specific topic], can you provide information on historical precedents or similar cases discussed in the document? Here is the document content: [PDF content here]."
+    </p>
+    <p>Meanwhile, choose from the following options:</p>
+    <ul>
+        <li>
+            Chat with PDFs: Start a conversation with the AI about the content of your PDFs.
+            <br>
+            <a href="{% url 'research_support:chat_with_pdf' %}?doc_id={{ docId }}" class="btn btn-primary mt-2">Chat with PDF</a>
+        </li>
+        <li>
+            Summarize PDF: Get a concise summary of the key points in your PDF.
+            <br>
+            <a href="{% url 'research_support:summarize_pdf' %}?doc_id={{ docId }}" class="btn btn-secondary mt-2">Summarize PDF</a>
+        </li>
+    </ul>
+</div>
+{% endblock content %}
