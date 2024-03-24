@@ -1,0 +1,1 @@
+"Given the context of the document detailing the latest Supreme Court decision on [specific topic], can you provide information on historical precedents or similar cases discussed in the document? Here is the document content: [PDF content here]."

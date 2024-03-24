@@ -10,56 +10,34 @@ from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.utils.safestring import mark_safe
+from django.utils.html import format_html
+import json
+
 import logging
 
 
-from .models import PDF, Document, Image, Summary, Tag, Related, Vector, QA, Feedback, Query
-from .forms import (
-    DocumentForm, ImageForm, SummaryForm, TagForm, RelatedForm, VectorForm,
-    QAForm, FeedbackForm, QueryForm, SearchForm, UploadForm, PDFForm,
-    ChatForm, PDFAnalysisForm, UploadPDFUrlForm, UploadPDFForm, DeletePDFForm
+from .models import PDF, ChatHistory, Summary 
+from .forms import (SummaryForm, SearchForm,
+    ChatForm, UploadPDFUrlForm, UploadPDFForm   
 )
 
 # Set up logging (you can configure it more appropriately for your project)
 logger = logging.getLogger("research_support.views")
 
 
-# def handle_upload_response(request, upload_type, response):
-#     if response.status_code == 200:
-#         # Handle successful upload
-#         # You can redirect to a success page or another appropriate page
-#         return HttpResponseRedirect(reverse('success_url'))
+def format_content(response):
+    try:
+        response_data = json.loads(response)
+        formatted_content = format_html("<p>{}</p>", response_data['content'].replace('\n', '<br>'))
+        references = response_data.get('references', [])
+        return formatted_content, references
+    except json.JSONDecodeError:
+        # If response is not JSON or can't be parsed, return it as is
+        return response, []
 
-#     elif response.status_code == 400:
-#         # Handle bad request errors
-#         # You can render an error page or pass error information to the template
-#         error_message = "Bad request error: {}".format(response.text)
-#         return HttpResponseServerError(error_message)
 
-#     elif response.status_code == 404:
-#         # Handle not found errors
-#         # You can render an error page or pass error information to the template
-#         error_message = "Not found error: {}".format(response.text)
-#         return HttpResponseServerError(error_message)
 
-#     elif response.status_code == 413:
-#         # Handle file size exceeded errors for file upload
-#         if upload_type == 'file':
-#             error_message = "File size exceeds the limit (4.5 MB). Please upload a smaller file or use the URL upload method."
-#             return HttpResponseServerError(error_message)
-#         else:
-#             error_message = "Request Entity Too Large: {}".format(response.text)
-#             return HttpResponseServerError(error_message)
-
-#     elif response.status_code == 504:
-#         # Handle timeout errors
-#         error_message = "Timeout error: The upload process took too long (300 seconds). Please try again later or use a different upload method."
-#         return HttpResponseServerError(error_message)
-
-#     else:
-#         # Handle other errors
-#         error_message = "An error occurred during the upload: {}".format(response.text)
-#         return HttpResponseServerError(error_message)
 
 def success_page(request):
     return render(request, 'research_support/success.html')
@@ -87,13 +65,13 @@ def about(request):
 #     pdf = PDF.objects.get(file_name=file_name)
 #     return render(request, 'research_support/pdf_detail.html', {'pdf': pdf})
 
-def download_pdf(request, doc_id):
-    pdf = PDF.objects.get(doc_id=doc_id)
-    file_path = pdf.file_path
-    with open(file_path, 'rb') as fh:
-        response = HttpResponse(fh.read(), content_type="application/pdf")
-        response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
-        return response
+# def download_pdf(request, doc_id):
+#     pdf = PDF.objects.get(doc_id=doc_id)
+#     file_path = pdf.file_path
+#     with open(file_path, 'rb') as fh:
+#         response = HttpResponse(fh.read(), content_type="application/pdf")
+#         response['Content-Disposition'] = 'inline; filename=' + os.path.basename(file_path)
+#         return response
 
 # Add other view functions here
 
@@ -101,10 +79,10 @@ def download_pdf(request, doc_id):
 
 # Make sure to add all the necessary view functions you need for your application.
 
-def delete_pdf(request, file_name):
-    pdf = PDF.objects.get(file_name=file_name)
-    pdf.delete()
-    return redirect('research_support:get_all_pdfs')
+# def delete_pdf(request, file_name):
+#     pdf = PDF.objects.get(file_name=file_name)
+#     pdf.delete()
+#     return redirect('research_support:get_all_pdfs')
 
 def search(request):
     if request.method == 'POST':
@@ -129,18 +107,18 @@ def search(request):
 #         form = PDFForm(instance=pdf)
 #     return render(request, 'research_support/edit_pdf.html', {'form': form})
 
-def update_pdf(request, doc_id):
-    pdf = PDF.objects.get(doc_id=doc_id)
-    if request.method == 'POST':
-        form = PDFForm(request.POST, request.FILES, instance=pdf)
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('research_support:pdf_detail', args=[doc_id]))
-    else:
-        form = PDFForm(instance=pdf)
-    return render(request, 'research_support/update_pdf.html', {
-        'form': form
-    })
+# def update_pdf(request, doc_id):
+#     pdf = PDF.objects.get(doc_id=doc_id)
+#     if request.method == 'POST':
+#         form = PDFForm(request.POST, request.FILES, instance=pdf)
+#         if form.is_valid():
+#             form.save()
+#             return HttpResponseRedirect(reverse('research_support:pdf_detail', args=[doc_id]))
+#     else:
+#         form = PDFForm(instance=pdf)
+#     return render(request, 'research_support/update_pdf.html', {
+#         'form': form
+#     })
 
 
 def pdf_options(request, doc_id):
@@ -273,27 +251,42 @@ def get_all_pdfs_from_ai_pdf_api(api_key):
 
 
 # Django view function to display the details of a specific PDF document
+
 def get_pdf(request, doc_id):
     if not doc_id:
-        # Handle the case where doc_id is empty or not provided
         return HttpResponse("Document ID is required.", status=400)
 
     api_key = os.environ.get('PDF_AI_API_KEY')
     if not api_key:
-        # Provide a user-friendly error message if the API key is missing
         return HttpResponse("API key for PDF.AI is not configured properly in the environment variables.", status=500)
     
     pdf_detail = get_pdf_from_ai_pdf_api(api_key, doc_id)
     if 'error' in pdf_detail:
-        # Render an error template if there was an issue fetching the document
         return render(request, 'research_support/get_pdf_error.html', {'error': pdf_detail['error']})
     
-    # Check if 'id' is present in the response; if not, it indicates an unexpected issue
     if 'id' not in pdf_detail:
         return render(request, 'research_support/get_pdf_error.html', {'error': 'No document ID found in the API response.'})
 
-    # Render a template to display the PDF details, assuming 'pdf_detail.html' is set up for this purpose
-    return render(request, 'research_support/pdf_detail.html', {'pdf': pdf_detail, 'doc_id': pdf_detail.get('id', doc_id)}) # Fallback to doc_id if 'id' isn't present in the response
+    # Fetch related chat history from the database
+    chat_histories = ChatHistory.objects.filter(docId=doc_id, user=request.user).order_by('-created_at')
+    # Format each chat history response
+    
+
+    for chat_history in chat_histories:
+        formatted_response, references = format_content(chat_history.response)
+        chat_history.formatted_response = formatted_response
+        chat_history.references = references
+
+
+    # Construct the context with both PDF details and chat histories
+    context = {
+        'pdf': pdf_detail,  # Assuming pdf_detail is a dictionary with PDF information
+        'doc_id': doc_id,  # Document ID as fetched or fallback
+        'chat_histories': chat_histories,  # Chat histories related to this PDF
+    }
+
+    # Render the detailed view template with the context
+    return render(request, 'research_support/pdf_detail.html', context)
 
 def get_pdf_from_ai_pdf_api(api_key, doc_id):
     # Construct the request URL using the document ID
@@ -314,6 +307,7 @@ def get_pdf_from_ai_pdf_api(api_key, doc_id):
         print(f"Error fetching document {doc_id}: {response.status_code}")
         return {"error": f"Failed to get document {doc_id}, status code: {response.status_code}"}
 
+@login_required
 def chat_with_pdf(request):
     # doc_id = request.session.get('docId')
     if request.method == 'POST':
@@ -321,7 +315,9 @@ def chat_with_pdf(request):
         if form.is_valid():
             docId = form.cleaned_data['docId']
             message = form.cleaned_data['message']
-            response = send_chat_request(message, docId)
+            save_chat = form.cleaned_data.get('save_chat', False)  # Default to False if not provided
+            use_gpt4 = form.cleaned_data.get('use_gpt4', False)  # Default to False if not provided
+            response = send_chat_request(request, message, docId, save_chat, use_gpt4)
             if 'error' not in response:  # Check for no error in response
                 return render(request, 'research_support/chat_response.html', {'response': response})
             else:
@@ -333,25 +329,33 @@ def chat_with_pdf(request):
 
     return render(request, 'research_support/chat_with_pdf.html', {'form': form})
 
-def send_chat_request(message, doc_id): 
+
+def send_chat_request(request, message, docId, save_chat, use_gpt4):
     api_url = 'https://pdf.ai/api/v1/chat'
     api_key = os.environ.get('PDF_AI_API_KEY')
-    if  not api_key:
-        raise ValueError("No API key set for PDF Ai PDF")       
+
+    if not api_key:
+        raise ValueError("No API key set for PDF Ai PDF")
 
     payload = {
-        'docId': doc_id, # Replace with the actual document ID
+        'docId': docId,
         'message': message,
-        'save_chat': True, # or False, based on your requirement
-        # Add other parameters as needed
-        'use_gpt4': True, # or False, based on your requirement
-        # 'language': 'en', # or 'es', 'fr', 'de', 'it', 'pt', 'nl', 'pl', 'ru', 'ja', 'ko', 'zh', 'ar', 'tr', 'he', 'id', 'th', 'vi', 'hi', 'bn', 'fa', 'ur', 'ms', 'fil', 'ta', 'te', 'ml', 'kn', 'mr', 'gu', 'pa', 'si', 'my', 'km', 'lo', 'ne
+        'save_chat': save_chat,
+        'use_gpt4': use_gpt4,  
     }
-    headers = {'X-API-Key': api_key}    
+    headers = {'X-API-Key': api_key}
     response = requests.post(api_url, json=payload, headers=headers)
 
     if response.status_code == 200:
-        return response.json()
+        chat_response = response.json()
+        # Save the chat interaction to your database
+        ChatHistory.objects.create(
+            user=request.user,
+            docId=docId,
+            message=message,
+            response=str(chat_response)  # Assuming you want to store the entire response as a string
+        )
+        return chat_response
     elif response.status_code == 401:
         return {'error': 'Invalid API key'}
     elif response.status_code == 400:
@@ -359,17 +363,16 @@ def send_chat_request(message, doc_id):
     else:
         return {'error': f'Unable to process the request. Status code: {response.status_code}'}
 
-
-def send_chat_all_request(message):
+def send_chat_all_request(message, save_chat, use_gpt4):
     api_url = 'https://pdf.ai/api/v1/chat-all/'
     api_key = os.environ.get('PDF_AI_API_KEY')
     if not api_key:
         raise ValueError("No API key set for PDF Ai PDF")
     payload = {
         'message': message,
-        'save_chat': True,  # or False, based on your requirement
+        'save_chat': save_chat, 
         # Add other parameters as needed
-        'use_gpt4': True,  # or False, based on your requirement
+        'use_gpt4': use_gpt4, 
         'language': 'en',  # or 'es', 'fr', 'de', 'it', 'pt', 'nl', 'pl', 'ru', 'ja', 'ko', 'zh', 'ar', 'tr', 'he', 'id', 'th', 'vi', 'hi', 'bn', 'fa', 'ur', 'ms', 'fil', 'ta', 'te', 'ml', 'kn', 'mr', 'gu', 'pa', 'si', 'my', 'km', 'lo', 'ne
     }
     headers = {'X-API-Key': api_key}
@@ -378,7 +381,6 @@ def send_chat_all_request(message):
         return response.json()
     else:
         return {'error': 'Unable to process the request'}
-
 
 def send_summary_request(doc_id):
     api_url = "https://pdf.ai/api/v1/summary/"

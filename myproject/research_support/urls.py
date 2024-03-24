@@ -16,7 +16,6 @@ urlpatterns = [
     path('get-pdf/<str:doc_id>/', views.get_pdf, name='get_pdf'),
     path('get-pdf/success/', views.success_page, name='get_pdf_success'),
     path('get-pdf/error/', views.upload_error, name='get_pdf_error'),
-    # path('pdf-detail/<int:pdf_id>/', views.pdf_detail, name='pdf_detail'),
 
     path ('summarize-pdf/', views.summarize_pdf, name='summarize_pdf'),
     path ('summarize-pdf/success/', views.success_page, name='summarize_pdf_success'),
@@ -38,13 +37,10 @@ urlpatterns = [
 
     path('upload-pdf/success/', views.success_page, name='upload_pdf_success'),
     
-    # path('summarize-pdf/', views.summarize_pdf, name='summarize_pdf'),
-    # path('summarize-pdf/success/', views.success_page, name='summarize_pdf_success'),
     
 
     path('search/', views.search, name='search'),
     path('upload-pdf-to-ai-pdf-api/', views.upload_pdf_to_ai_pdf_api, name='upload_pdf_to_ai_pdf_api'),
-    # path('pdfs/', views.pdfs, name='pdfs'),
     path('success/', views.success_page, name='success_url'),
     path('upload-error/', views.upload_error, name='upload_error')
 

@@ -27,4 +27,15 @@
             <button type="submit" class="btn btn-primary">Get Summary</button>
         </form>
     </div>
+    <!-- Inline JavaScript for dynamically resizing the textarea -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const summaryTextarea = document.getElementById('id_summary');
+        if (summaryTextarea) {
+            // Adjust the height of the textarea to fit its content
+            summaryTextarea.style.height = ""; // Reset height to auto-calculate
+            summaryTextarea.style.height = summaryTextarea.scrollHeight + "px";
+        }
+    });
+    </script>
 {% endblock %}
