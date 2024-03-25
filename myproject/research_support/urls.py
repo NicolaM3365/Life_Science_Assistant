@@ -45,6 +45,7 @@ urlpatterns = [
     path('success/', views.success_page, name='success_url'),
     path('upload-error/', views.upload_error, name='upload_error'),
 
+    path('pdf-options/<str:doc_id>/', views.pdf_options, name='pdf_options'),
 
 
 

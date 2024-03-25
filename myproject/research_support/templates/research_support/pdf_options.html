@@ -4,8 +4,8 @@
         <h1>What would you like to do with your PDF?</h1>
             <div>
                 <!-- Replace 'chat_with_pdf' and 'summarize_pdf' with the correct URL names you've defined in your urls.py -->
-                <a href="{% url 'chat_with_all_pdfs' %}?doc_id={{ doc_id }}" class="btn btn-primary">Chat with PDFs</a>
-                <a href="{% url 'summarize_pdf' %}?doc_id={{ doc_id }}" class="btn btn-secondary">Summarize PDF</a>
+                <a href="{% url 'research_support:chat_with_all_pdfs' %}?doc_id={{ pdf.id }}" class="btn btn-primary">Chat with PDFs</a>
+                <a href="{% url 'research_support:summarize_pdf' %}?doc_id={{ pdf.id }}" class="btn btn-secondary">Summarize PDF</a>
             </div>
         </body>
         </html>

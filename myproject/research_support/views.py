@@ -124,9 +124,9 @@ def search(request):
 
 def pdf_options(request, doc_id):
     # Store doc_id in the session
-    request.session['doc_id'] = doc_id
+    request.session['pdf.id'] = doc_id
     # Render a template that offers buttons/links to chat or summarize the PDF
-    return render(request, 'research_support/pdf_options.html', {'doc_id': doc_id})
+    return render(request, 'research_support/pdf_options.html', {'pdf.id': doc_id})
 
 
 
