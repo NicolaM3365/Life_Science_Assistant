@@ -26,6 +26,7 @@ urlpatterns = [
     # URL pattern for displaying the chat form
 
     path('chat-with-pdf/', views.chat_with_pdf, name='chat_with_pdf'),
+    # path('chat-with-all-pdfs/', views.chat_with_all_pdfs, name='chat_with_all_pdfs'),
 
     # URL pattern for processing the chat input and displaying the response
     # path('process-chat/', views.process_chat, name='process_chat'),
