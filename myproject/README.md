@@ -89,3 +89,16 @@ Contributions are welcome! Please open an issue or pull request if you have sugg
 ## License
 
 Specify your project's license here.
+
+
+# Project Brief and Presentations
+
+The project initiation phase is documented through a series of presentations and a detailed project brief. These documents outline the initial concept, targeted user demographics, and primary objectives.
+
+- [Link to project brief](URL_to_project_brief)
+https://www.dropbox.com/scl/fi/ggw4vb9orp5b3sov2xcok/My-Life_Research_Assistant_-Project_Brief-21_02_2023.pdf?rlkey=e725107gvppdzli54v16h6xyn&dl=0
+- [Presentation on initial concept](URL_to_presentation)
+-https://miro.com/app/board/uXjVNqKkJew=/?share_link_id=995464259032&shareablePresentation=1
+
+
+

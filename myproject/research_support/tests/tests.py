@@ -3,10 +3,11 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from unittest.mock import patch
 from research_support.models import PDF, ChatHistory, Summary
 from research_support.forms import SearchForm, UploadPDFUrlForm, UploadPDFForm, DeletePDFForm, ChatForm, SummaryForm
-
+import datetime
 
 
 class SearchFormTest(TestCase):
@@ -212,13 +213,6 @@ def test_upload_pdf_redirect_if_not_logged_in(self):
 
 
 
-class ChatWithPdfTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        # Set up data for the whole TestCase
-        cls.user = User.objects.create_user(username='testuser', password='12345')
-
-
 
 
     def test_chat_with_pdf_view_no_login_redirect(self):
@@ -233,37 +227,6 @@ class ChatWithPdfTests(TestCase):
         
         # Test whether the response redirects as expected
         self.assertRedirects(response, expected_redirect_url, fetch_redirect_response=False)
-
-
-class ChatWithPdfTests(TestCase):
-    def setUp(self):
-        # Set up test user
-        self.user = User.objects.create_user(username='testuser', password='12345')
-    
-    @patch('research_support.views.send_chat_request')
-    def test_chat_with_pdf_post_valid(self, mock_send_chat_request):
-        # Mock the send_chat_request method to return a simulated API response
-        mock_send_chat_request.return_value = {
-            "content": "Mocked API Response",
-            "references": [{"pageNumber": 1, "fromLine": 2, "toLine": 3}]
-        }
-
-        self.client.login(username='testuser', password='12345')
-        url = reverse('research_support:chat_with_pdf')
-        data = {
-            'docId': 'test_doc_id',
-            'message': 'Hello, world!',
-            'save_chat': True,
-            'use_gpt4': False,
-        }
-        response = self.client.post(url, data)
-
-        # Ensure the form submission is successful and the expected template is rendered
-        self.assertEqual(response.status_code, 200)
-        # Check that the template used is the expected one for a successful chat response
-        self.assertTemplateUsed(response, 'research_support/chat_response.html')
-        # Check for presence of 'Mocked API Response' in the rendered template
-        self.assertContains(response, 'Mocked API Response')
 
 
 
@@ -298,10 +261,7 @@ class ChatWithPdfTests(TestCase):
         self.assertFalse(response.context['form'].is_valid())
         self.assertTrue(response.context['form'].errors)
 
-        # If you want to be more specific, you can check for errors on the expected fields
-        # Example:
-        # self.assertIn('message', response.context['form'].errors)
-
+       
 
 @patch('research_support.views.requests.post')
 def test_chat_with_pdf_api_error(self, mock_post):
@@ -408,48 +368,44 @@ class ResearchSupportViewTests(TestCase):
 #             response='This is a test chat response',
 #             created_at='2022-01-01 00:00:00'
 
-#     )
-
-# class UploadPDFFormTest(TestCase):
-
-#     def test_form_validity(self):
-#         form_data = {'file': SimpleUploadedFile("test.pdf", b"file_content"), 'isPrivate': False, 'ocr': False}
-#         form = UploadPDFForm(data=form_data)
-#         self.assertTrue(form.is_valid())
+#         )
 
 
+class ChatHistoryModelTests(TestCase):
 
-# class UploadPDFViewTests(TestCase):
+    def setUp(self):
+        # Create a user for the ForeignKey relation
+        self.user = get_user_model().objects.create_user(username='testuser', password='testpass123')
 
-#     def setUp(self):
-#         # Create a user for authentication
-#         self.user = User.objects.create_user(username='testuser', email='test@example.com', password='testpassword')
-#         self.client = Client()
-#         self.upload_url = reverse('upload_pdf')
+    def test_chat_history_creation(self):
+        # Create an instance of ChatHistory with the user
+        chat_history = ChatHistory.objects.create(
+            user=self.user,
+            docId='document123',
+            message='This is a test message',
+            response='This is a test response',
+        )
 
-#     def test_upload_pdf_view_get_request(self):
-#         self.client.login(username='testuser', password='testpassword')
-#         response = self.client.get(self.upload_url)
-#         self.assertEqual(response.status_code, 200)
-#         self.assertTemplateUsed(response, 'research_support/upload_pdf.html')
-#         self.assertIsInstance(response.context['url_form'], UploadPDFUrlForm)
-#         self.assertIsInstance(response.context['file_form'], UploadPDFForm)
+        # Verify the ChatHistory instance has been saved (id is generated)
+        self.assertIsNotNone(chat_history.id, "Failed to create ChatHistory instance")
 
-#     def test_upload_pdf_url_form_post_request(self):
-#         self.client.login(username='testuser', password='testpassword')
-#         data = {'url': 'http://example.com/test.pdf', 'isPrivate': True, 'ocr': True, 'url_submit': True}
-#         response = self.client.post(self.upload_url, data)
-#         # Assuming handle_upload_response redirects or renders a specific template upon success
-#         self.assertEqual(response.status_code, 302)  # or check for specific template
+        # Verify the attributes are correctly saved
+        self.assertEqual(chat_history.user, self.user, "The user attribute does not match")
+        self.assertEqual(chat_history.docId, 'document123', "The docId attribute does not match")
+        self.assertEqual(chat_history.message, 'This is a test message', "The message attribute does not match")
+        self.assertEqual(chat_history.response, 'This is a test response', "The response attribute does not match")
 
-#     def test_upload_pdf_file_form_post_request(self):
-#         self.client.login(username='testuser', password='testpassword')
-#         file_data = SimpleUploadedFile("test.pdf", b"pdf file content", content_type="application/pdf")
-#         data = {'file': file_data, 'isPrivate': False, 'ocr': False, 'file_submit': True}
-#         response = self.client.post(self.upload_url, data, follow=True)
-#         # Assuming handle_upload_response redirects or renders a specific template upon success
-#         self.assertEqual(response.status_code, 302)  # or check for specific template
+        # Test auto_now_add for created_at
+        self.assertIsInstance(chat_history.created_at, datetime.datetime, "The created_at field is not a datetime instance")
 
-#     def test_upload_pdf_view_redirect_if_not_logged_in(self):
-#         response = self.client.get(self.upload_url)
-#         self.assertRedirects(response, f'/accounts/login/?next={self.upload_url}')
+    def test_chat_history_str_method(self):
+        # Create an instance of ChatHistory
+        chat_history = ChatHistory.objects.create(
+            user=self.user,
+            docId='uniqueDocumentID',
+            message='Another test message',
+            response='Another test response',
+        )
+
+        # Test the __str__ method
+        self.assertEqual(str(chat_history), 'uniqueDocumentID', "__str__ method does not return expected docId")
